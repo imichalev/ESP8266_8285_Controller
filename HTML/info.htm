@@ -1,0 +1,263 @@
+<!doctype html>
+<html>
+<body>
+
+<!-- Info page -->
+<!-- POST info=?-->
+<!-- Request info&date&time&temp&mqtt&AutoModeCurrent&on&off&Status&power&IP&pwd&signal& -->
+
+
+
+<style>
+table { width:50%;
+        margin-left:auto;
+        margin-right:auto;		
+}
+
+th,td {display: none;
+       border-radius: 8px;
+	   font-size:32px;
+}
+
+th {background-color: rgba(128, 128, 128, 0.48);
+    margin:5px;	
+}
+
+td {text-align:center;
+}
+
+a {text-decoration:none;
+   color:black;
+   display:block;
+   width:100%;
+}
+
+#myProgress{
+  width: 100%;
+  background-color:gray;
+   border-radius: 4px;
+}
+#myBar{
+ width:0;
+ height:20px;
+ background-color:green;
+ text-align: center;
+ line-height: 20px;
+ color: white;
+ border-radius: 4px;
+ font-size: 16px;
+}
+</style>
+
+<script type='text/javascript'>
+
+window.onload=function(){
+//Post request info ...
+request('/info=?');
+}
+function byId(id){return document.getElementById(id)};
+function byClass(id){return document.getElementsByClassName(id)[0]};
+function byClassi(id,i){return document.getElementsByClassName(id)[i]};
+function byTag(id){return document.getElementsByTagName(id)[0]};
+var urladdress=window.location;
+
+function espInfo(info){
+<!-- Request info&date&time&temp&mqtt&on&off&Status&power&IP&ssid&pwd&signal& -->
+
+   var info=info.split('&');
+   console.log(info);
+   if(info.length>0){
+      for(i=1;i<info.length;i++){
+	    switch(i){
+		case 1:
+		 console.log(info[i]);
+		 byId('hl1').innerHTML=info[i];
+		 byId('hl1').style.display='block';
+		 break;
+		case 2:
+		 byId('hl2').innerHTML ="Temperature: "+info[i];
+		 byId('hl2').style.display='block';
+		 break;
+		case 3:
+		 byId('hl2').innerHTML =byId('hl2').innerHTML+ "<br>"+"MQTT:"+info[i];
+		 byId('hl2').style.display='block';
+		 break;
+		case 4:
+		   byId('hl3').innerHTML=info[i] + "<br>";
+		  //byId('hl3').innerHTML=byId('hl3').innerHTML + number+"<br>";
+		 break;
+		case 5:
+		 var period=info[i];
+		 var hour=parseInt(period/60);
+		 var minute=period - 60*hour;
+		 if (hour < 10) hour="0"+hour;
+		 if (minute <10) minute= "0" + minute;		
+		 byId('hl3').innerHTML = byId('hl3').innerHTML+"On "+hour+":"+minute+ "<br>";
+		 byId('hl3').style.display='block';
+		 break;
+		case 6:
+		 var period=info[i];
+		 var hour=parseInt(period/60);
+		 var minute=period-60*hour;
+		 if (minute <10) minute= "0" + minute;
+		 if (hour < 10) hour="0"+hour;
+		 byId('hl3').innerHTML = byId('hl3').innerHTML + "Off " + hour+ ":" + minute;
+		 byId('hl3').style.display='block';
+		 break;
+		case 7:
+		  switch(info[i]){
+		   case '0':
+		    var mode="MANUAL";
+		   break
+		   case '1':
+		    var mode="SLEEP";
+		   break;
+		   case '2':
+		    var mode="AUTO";
+		   break;
+		  }
+		 byId('hl4').innerHTML = "MODE <br>"+mode;
+		 byId('hl4').style.display='block';
+		 break;
+		case 8:
+		  if(info[i]==1) pwr="ON";
+		   else pwr="OFF";
+		  byId('hl5').innerHTML = "POWER <br> "+pwr;
+		  byId('hl5').style.display='block';
+		  break;
+		case 9:
+		  byId('hl6').innerHTML = "IP <br> " +info[i];
+		  byId('hl6').style.display='block';
+		  break; 
+		case 10:
+		  byId('hl7').innerHTML = "SSID <br> "+info[i];
+		  byId('hl7').style.display='block';
+		  break; 
+		case 11:
+		  byId('hl8').innerHTML = "PWD <br> "+info[i];
+		  byId('hl8').style.display='block';
+		  break;   
+	    case 12:
+	       var rssi=info[i];
+		   //var myRssi=rssi;
+		   if (rssi !='31'){
+		   byId('myProgress').style.width='100';
+		   rssi=Number(rssi);
+		   rssi=130+rssi;
+		   console.log('rssi:'+rssi);
+		   switch(true){
+		     case  (rssi<=20):
+			   byId('myBar').style.backgroundColor = 'red';
+			   break;
+			 case  (rssi<=40):
+			   byId('myBar').style.backgroundColor = 'orange';
+			   break;			 
+		   }
+		  
+		   byId('myBar').style.width=rssi + "%";
+		   byId('myBar').innerHTML=rssi+ "%";	   
+		   }else{
+		   byId('myBar').style.width=0;
+		   byId('myProgress').style.width=0;
+		   }
+		   break; 
+	     		  		   		   
+		}
+	  }
+   }
+    
+}
+ 
+ 
+function request(url){
+   //alert("Call me!!");
+  var xhr = new XMLHttpRequest(); 
+  xhr.onreadystatechange=function(event){
+   if(xhr.readyState === 4 && xhr.status === 200){
+     //alert("Call me from Ajax!!");
+	  //console.log(xhr.responseText);
+	  //console.log(xhr.responseText.search('scanwifi='));
+	  //console.log(xhr.responseText.search('status='));
+	   if(xhr.responseText.search('info=')==0){ 
+	    espInfo(xhr.responseText);
+	   }
+    } else if(xhr.readyState === 4 && xhr.status===0){
+	if(url==='/scanwifi?'){byId('scan').value='Scan Error !';}
+	if(url==='/lan_status?'){
+	 byId('loader').innerHTML='Load Error!';
+	 byId('wanloader').innerHTML='Load Error!';
+	 byId('dateloader').innerHTML='Load Error!';
+	 loader=true;}
+	}
+  }
+  xhr.open("POST",urladdress+url+Math.random(),true);
+  xhr.send();
+ }
+</script>
+
+
+
+<table>
+<tr>
+  <th style='background-color:white;display: block;' > SYSTEM INFO </th>
+</tr>
+
+<!-- line 1 date/time -->
+<tr>
+  <th id='hl1' >My First Line </th>
+   <!--<td> some info </td>-->
+</tr>
+<!-- line 2 Temperature Mqtt: -->
+<tr>
+  <th id='hl2'> My Second Line </th>
+    <!--<td id='dl2'> some info </td>-->
+</tr>
+<!-- line 3  Auto Mode -->
+<tr>
+  <th id='hl3'> My Third ine </th>
+</tr>
+<!-- line 4  On:10:23  Off:13:34 -->
+<tr>
+  <th id='hl4'> My Fourth Line </th>
+</tr>
+<!-- line 5 Status: Manual / Auto/ Sleep -->
+<tr>
+  <th id='hl5'> My Fifth Line </th>
+</tr>
+<!-- Line 6 Power: On/Off -->
+<tr>
+  <th id='hl6'> My Sixth Line </th>
+</tr>
+<!-- Line 7 IP: -->
+<tr>
+  <th id='hl7'> My Seventh Line </th>
+</tr>
+<!-- Line 8 Pwd: -->
+<tr>
+  <th id='hl8'> My Eighth Line </th>
+</tr>
+<tr> 
+<tr>
+  <th style='display: block;' id='hl9'> 
+   Signal 
+  <!--<progress id='prgRSSI'  label-signal="lala" style='display:none;border-radius:8px;' value="0" min="0" max="70">12</progress>-->
+  <div id="myProgress">
+    <div id="myBar"></div>
+  </div> 	
+  </th>
+</tr>
+<tr> 
+  
+  <th style='display: block;'>
+  <a href='./' >
+      SETUP    
+   </a>
+  </th> 
+ 
+</tr>
+
+</table>
+<!-- Info page -->
+
+</body>
+</html>

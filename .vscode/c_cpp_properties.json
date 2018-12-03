@@ -1,0 +1,36 @@
+{
+    "env_espressif": {
+        "ESPRESSIF_PATH": "C:/Espressif/ESP8266_SDK"
+    },
+    "env_xtensa": {
+        "XTENSA_PATH": "C:/Espressif/xtensa-lx106-elf/xtensa-lx106-elf"
+    },
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/Espressif/xtensa-lx106-elf/xtensa-lx106-elf/include",
+                "C:/Espressif/ESP8266_SDK/include"
+                
+            ],
+            "intelliSenseMode": "clang-x64",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/**",
+                    "C:/Espressif/xtensa-lx106-elf/xtensa-lx106-elf/include",
+                    "C:/Espressif/ESP8266_SDK/include"
+                ]
+            },
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "C:\\Program Files\\LLVM\\bin\\clang.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

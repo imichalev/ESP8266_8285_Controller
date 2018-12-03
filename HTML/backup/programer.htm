@@ -1,0 +1,538 @@
+<!doctype html>
+<html>
+<meta http-equiv="cache-control" content="no-cache"/>
+<meta http-equiv="pragma" content="no-cache" />
+<script>
+    window.onload=function(){
+        var number=1;
+        var hour_on = 0;
+        var minute_on=0;
+        var hour_off= 0;
+        var minute_off=0;
+        var displayAuto=true;
+        var displaySleep=true;
+        var displayManu=true;
+        var sleepHour=0;
+        var sleepMinute=0;
+        var sleep=0;
+        var power=0;
+        var hourOff=0;
+        var minuteOff=0;
+        var programMode=0;
+        var programPowerNumber=0;
+        readStatus();
+        var check=setInterval(readStatus, 1000*30);
+
+
+        function byId(id){return document.getElementById(id)};
+        function byClass(id){return document.getElementsByClassName(id)[0]};
+        function byTag(id){return document.getElementsByTagName(id)[0]};
+
+        //ShowNumber();
+        Status();
+        selectHour('hours_on');
+        selectHour('hours_off');
+        selectHour('sleep_h');
+        selectMinutes('sleep_m');
+        selectMinutes('minutes_on');
+        selectMinutes('minutes_off');
+
+
+        byId('sleep_h').addEventListener('change',function(){
+            sleepHour=byId('sleep_h').selectedIndex;
+            //console.log(sleepHour);
+            showSleep();
+        });
+        byId('sleep_m').addEventListener('change',function(){
+            sleepMinute=byId('sleep_m').selectedIndex;
+            //console.log(sleepMinute);
+            showSleep();
+        });
+        byId('sleep').addEventListener('click',function(){
+            console.log('click sleep!');
+
+            if(displaySleep){
+                //Sent mode to ESP
+                //command('&1&');
+                showSleep();
+            }else {
+                hideSleep();
+            }
+
+        });
+        byId('auto').addEventListener('click',function(){
+            if( displayAuto){
+                //Sent mode to ESP
+                //command('&2&');
+                showAuto();
+            }else{
+                hideAuto();
+            }
+        });
+        byId('manual').addEventListener('click',function(){
+            //readStatus();
+            if(displayManu){
+                //Sent mode to ESP
+                //command('&0&');
+                showManu();
+            }else{
+                hideManu();
+            }
+
+        });
+        byId('on').addEventListener('click',function(){
+            //comm&0&0&   Mode manu On
+            command('&0&1&');
+        });
+        byId('off').addEventListener('click',function(){
+            //comm&0&1   Mode manu On
+            command('&0&0&');
+        });
+        byId('loader_m').addEventListener('click',function(){
+            readStatus();
+        });
+        byId('loader_s').addEventListener('click',function(){
+            readStatus();
+        });
+        byId('led').addEventListener('click',function() {
+            readStatus();
+        });
+        byId('sleep_send').addEventListener('click',function(){
+          sleepSend();
+        });
+        byClass('send').addEventListener('click',function(){
+            var mode =byId('mode').selectedIndex;
+            if(mode==3) return;
+            var number=parseInt(byClass('number').innerHTML);
+            console.log("Program mode:"+mode);
+            switch(mode){
+                case 0:
+                    //array[number]=new program(number);
+                    programOff(number);
+                    break;
+                case 1:
+                    hour_on=byId('hours_on').selectedIndex;
+                    minute_on=byId('minutes_on').selectedIndex;
+                    hour_off=byId('hours_off').selectedIndex;
+                    minute_off=byId('minutes_off').selectedIndex;
+                    console.log(hour_on);
+                    console.log(minute_on);
+                    console.log(hour_off);
+                    console.log(minute_off);
+                    //console.log(number);
+                    var timeOn=hour_on*60 +minute_on;
+                    var timeOff=hour_off*60 +minute_off;
+                    if(isNaN(number))number=1;
+                    //console.log(number);
+                    programDaily(number,1,timeOn,timeOff);
+                    //array[number]=new program(number,mode,hour_on,minute_on,hour_off,minute_off);
+                    break;
+//                case 2:
+//                    hour_on=byId('hours_on').selectedIndex;
+//                    minute_on=byId('minute_on').selectedIndex;
+//                    hour_off=byId('hours_off').selectedIndex;
+//                    minute_off=byId('minute_off').selectedIndex;
+//                    console.log(hour_on);
+//                    console.log(minute_on);
+//                    console.log(hour_off);
+//                    console.log(minute_off);
+//
+//                    //array[number]=new program(number,mode);
+//                    break;
+            }
+            //console.log(array[number]);
+        });
+        byClass('left').addEventListener('click',function(){
+            console.log('Click Left arrow');
+            number--;
+            if(number<1)number=10;
+             //Read Status for Program with Number:number
+            request('/status?&2&'+number+'&');
+            //ShowNumber();
+        });
+        byClass('right').addEventListener('click',function(){
+            console.log('Click Right arrow');
+            number++
+            if(number>10)number=1;
+            request('/status?&2&'+number+'&')
+
+           // ShowNumber();
+        });
+        byId('mode').addEventListener('change',function(){
+            hour_on=0;
+            byId('hours_on').selectedIndex=hour_on;
+            minute_on=0;
+            byId('minutes_on').selectedIndex=minute_on;
+            hour_off=0;
+            byId('hours_off').selectedIndex=hour_off;
+            minute_off=0;
+            byId('minutes_off').selectedIndex=minute_off;
+            Status();
+        });
+
+function programOff(number){
+      // mode=2 - auto  ; pr.number=1 first  ; pr.mode=0 - off  ; That is default for all program.On Status will return
+    command('&2&'+number+'&0&');
+}
+function programDaily(number,mode,timeOn,timeOff){
+      // mode=2 - auto  ; pr.number=1 first  ; pr.mode=1 - Daily  ; imteOn;timeOff That is default for all program.On Status will return
+    command('&2&'+number+'&'+mode+'&'+timeOn+'&'+timeOff+'&');
+ }
+        function selectHour(id){
+            for(i=0;i<24;i++){
+                var option=document.createElement('option');
+                if(i<10){
+                    option.text='0'+i;
+                }
+                else option.text=i;
+                byId(id).add(option);
+            }
+        }
+        function selectMinutes(id){
+            for(i=0;i<60;i++){
+                var option=document.createElement('option');
+                if(i<10){
+                    option.text='0'+i;
+                }
+                else option.text=i;
+                byId(id).add(option);
+            }
+        }
+        function showAuto(){
+            byClass('programSetup').style.display='block';
+            displayAuto=false;
+            if(!displaySleep)hideSleep();
+            if(!displayManu)hideManu();
+         }
+        function hideAuto(){
+            byClass('programSetup').style.display='none';
+            displayAuto=true;
+        }
+        function showSleep(){
+            var now=new Date();
+            var hour = now.getHours();
+            var minute = now.getMinutes();
+            byClass('sleep').style.display='block';
+            hideAuto();
+            hideManu();
+            displaySleep=false;
+        }
+        function hideSleep(){
+            byClass('sleep').style.display='none';
+            displaySleep=true;
+        }
+        function showManu(){
+            if(!displayAuto)hideAuto();
+            if(!displaySleep)hideSleep();
+            byClass('manual').style.display='block';
+            displayManu=false;
+
+        }
+        function hideManu(){
+            byClass('manual').style.display='none';
+            displayManu=true;
+        }
+        function sleepSend(){
+            sleep=sleepHour*60+sleepMinute;
+            command('&1&'+sleep+'&')
+        }
+        function ShowNumber(){
+            byClass('number').innerHTML=number;
+            console.log(programMode);
+            byId('mode').selectedIndex=programMode;
+            console.log(hour_on+':'+minute_on+';'+hour_off+':'+minute_off);
+            byId('hours_on').selectedIndex=hour_on;
+            byId('minutes_on').selectedIndex=minute_on;
+            byId('hours_off').selectedIndex=hour_off;
+            byId('minutes_off').selectedIndex=minute_off;
+            Status();
+        }
+        function Status(){
+            var mode =byId('mode').selectedIndex;
+            byClass('left').style.visibility='visible';
+            byClass('right').style.visibility='visible';
+            byClass('number').style.visibility='visible';
+            byClass('sleep').style.display='none';
+            byClass('ON').style.display='none';
+            byClass('OFF').style.display='none';
+            byId('data').style.display='none';
+            switch(mode){
+                case 0:
+                    break;
+                case 1:
+                    byClass('ON').style.display='block';
+                    byClass('OFF').style.display='block';
+                    byId('selectors').style.margin='10px auto';
+                    break;
+                case 2:
+                    byId('data').style.display='block';
+                    byClass('ON').style.display='block';
+                    byClass('OFF').style.display='block';
+                    byId('selectors').style.margin='0px auto';
+                    break;
+
+            }
+        }
+        function espData(data){
+            data = data.split('&');
+            var len=data.length;
+            console.log("Len of data is:"+len);
+            if(len<2){
+                errorStatus(data);
+                return;
+            }
+            var mode=data[1];
+            var power=data[2];
+            setPower(power);
+
+            if (mode==0){
+                console.log('Manual Mode');
+                modeManu();
+                if(len>7)showAutoProgram(data);
+            }
+            else if(mode==1){
+                console.log('Sleep Mode');
+                if(len>4){
+                    sleep=data[3];
+                    console.log('sleep:'+sleep);
+                    modeSleep(sleep);}
+                else if(len>7)showAutoProgram(data);
+                return;
+            }
+            else if(mode==2){
+                console.log('Auto Mode');
+                if(len>4){
+                    modeAuto(data);}
+                else {
+                    errorStatus(data);
+                    return;
+                }
+            }
+        };
+        function setPower(power){
+            console.log("Power status:"+power);
+            if(power==1){
+                console.log("Power status:"+power);
+                byId('led').style.backgroundColor='Chartreuse';
+            }
+            if(power==0){
+                console.log("Power status:"+power);
+                byId('led').style.backgroundColor='Crimson';
+               }
+        }
+        function modeSleep(sleep){
+            sleepHour=parseInt(sleep/60);
+            sleepMinute=sleep - sleepHour*60;
+            byId('sleep_m').selectedIndex=sleepMinute;
+            byId('sleep_h').selectedIndex=sleepHour;
+            byId('sleep').style.backgroundColor='green';
+            byId('manual').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+            byId('auto').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+            showSleep();
+        }
+        function modeManu(data){
+            byId('manual').style.backgroundColor='green';
+            byId('sleep').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+            byId('auto').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+            sleep=0;
+            byId('sleep_m').selectedIndex=0;
+            byId('sleep_h').selectedIndex=0
+        }
+        function modeAuto(data){
+            byId('auto').style.backgroundColor='green';
+            byId('manual').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+            byId('sleep').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+            showAutoProgram(data);
+        }
+        function showAutoProgram(data){
+            number=data[3];
+            programMode=data[4];
+            hour_on=parseInt(data[5]/60);
+            minute_on=data[5] - hour_on*60;
+            hour_off=parseInt(data[6]/60);
+            minute_off=data[6] - hour_off*60;
+            programPowerNumber=data[7];
+            //console.log(hour_on+':'+minute_on+';'+hour_off+':'+minute_off);
+            showAuto();
+            ShowNumber();
+        }
+        function errorStatus(data){
+            console.log('Error in status data:'+data);
+        }
+        function readStatus() {
+
+            console.log('Read status..');
+            if(programPowerNumber!=0)
+            {
+                request('/status?&2&'+programPowerNumber+'&');
+            }
+            request('/status?');
+
+        }
+        function command(comm){
+            console.log('Send command'+comm);
+            //clearInterval(check);
+            request('/comm'+comm);
+        }
+        function request(url){
+            //alert("Call me!!");
+            byId('loader_m').innerHTML='Loading...';
+            byId('loader_s').innerHTML='Loading...';
+            byId('loader_a').innerHTML='Loading....';
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange=function(event){
+                if(xhr.readyState === 4 && xhr.status === 200){
+                    //alert("Call me from Ajax!!");
+                    //console.log(xhr.responseText);
+                    //console.log(xhr.responseText.search('scanwifi='));
+                    //console.log(xhr.responseText.search('status='));
+//                    if(xhr.responseText.search('status&2')==0)
+//                    {
+//                        //Respond for auto program
+//                        //scanWifiResult(xhr.responseText);
+//                    }
+                    if(xhr.responseText.search('status&')==0)
+                    {
+                        byId('loader_m').innerHTML='Load Ok!';
+                        byId('loader_s').innerHTML='Load Ok!';
+                        byId('loader_a').innerHTML='Load Ok!';
+                        espData(xhr.responseText);
+                    }
+
+                } else if(xhr.readyState === 4 && xhr.status===0){
+                    //if(url==='/scanwifi?'){byId('scan').value='Scan Error !';}
+                   // if(url==='/status?'){
+                        byId('led').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+                        byId('manual').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+                        byId('sleep').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+                        byId('auto').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+                        byId('loader_m').innerHTML='Load Error!';
+                        byId('loader_s').innerHTML='Load Error!';
+                        byId('loader_a').innerHTML='Load Error!';
+                       // loader=false;}
+                }
+            }
+            xhr.open("POST",url+Math.random(),true); //"http://10.10.10.1"
+            xhr.send();
+        }
+
+
+    }
+</script>
+
+<style>
+    div{-webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        outline: 0;}
+    body{text-align:center;padding:0;margin:0;}
+    h1,h2 {display:inline-block;margin:10px 0 10px 0;text-align:center;border-radius:8px;cursor:pointer;background-color:rgba(128, 128, 128, 0.48);width:300px;user-select:none;}
+    div.programSetup{display:none;}
+    label{text-align:center;}
+    div#ON{font-size:24px;background-color:gray;width:150px;margin:0px auto -6px auto;border-radius:8px;}
+    select{-webkit-appearance: none;-moz-appearance: none;appearance:none;border-style:none;cursor:pointer;font-size:32px;outline:none;background-color:rgba(158, 158, 158, 0);}
+    select::-ms-expand { display: none;}
+    div#program{display:inline-block;padding-top:5px;background-color:rgba(158, 158, 158, 0.56);height:210px;width:170px;margin:0 auto;border-radius:8px;}
+    ul {list-style:none;text-align:center;}
+    li {display:inline;}
+    .number{font-size:32px;margin:10px 0 0 0;;}
+
+    div.left {float:left;cursor:pointer;font-size:72px;margin:60px 0px 0px 0px;}
+    div.right{float:right;cursor:pointer;font-size:72px;margin:60px 0px 0px 0px;}
+    div.left:active {transform: translateX(-4px);}
+    div.right:active {transform: translateX(+4px);}
+
+    button.left{float:left;cursor:pointer;font-size:48px;margin:0px 0px 0px 0px;}
+    button.right{float:right;}
+
+    .send {cursor:pointer;margin:15px 0 5px 0;background-color:gray;border-radius:8px;height:40px;font-size:36px;}
+    .send:active {transform: translateY(-4px);}
+    #data{width:150px;border-radius:8px;margin:0px auto 9px auto;display:none;}
+    #data:focus #mode:focus{outline:none;}
+    .right-arrow:after {font-size:42px;content:'\25BA';}
+    .left-arrow:before {font-size:42px;content:'\25C4';clear:both;}
+    div#selectors{width:100px;height:50px;margin:0 auto;border-radius:8px;display:none;}
+    div.status{margin:18px auto 0;cursor:pointer;}
+    div#selectors.sleep{margin:28px auto;display:'none';}
+    div.programSetup h3 {display:inline-block;margin:10px 0 10px 0;text-align:center;border-radius:8px;background-color:rgba(128, 128, 128, 0.48);width:200px;user-select:none;}
+    div.manual{display:none;}
+    div.button{cursor:pointer;padding: 20px;margin:10px 0 0px 0;background-color:gray;border-radius:8px;height:50px;font-size:36px;}
+    #off.button{margin:30px 0 0 0;}
+    div.button:active {transform: translateY(-4px);}
+</style>
+
+<body>
+<!--
+<h1 id='lan_setup'>SETUP LAN PAGE</h1>
+<br>
+<h1 id='wan_setup'>SETUP WAN PAGE</h1>
+<br>
+-->
+<h1 id='timer setup'>TIMER SETUP</h1>
+<br>
+<h1 id='led'>LED</h1>
+<br>
+<h2 id='manual'> MANUAL </h2>
+<div class='manual' style='width:200px;margin:0 auto;'>
+    <div id='on' class='button'>ON</div>
+    <div id='off' class='button' >OFF</div>
+    <div id='loader_m' style="margin:10px auto;cursor:pointer;">Loading...</div>
+</div>
+
+<br>
+<h2 id='auto'> AUTO </h2>
+<br>
+<div class='programSetup'>
+    <h3> PROGRAM SETUP </h3>
+    <div  style='text-align:center;margin:0 auto; width:300px;'>
+        <div class="left">&#171;</div>
+        <div id='program' >
+            <select id='mode' >
+                <option val='0'>None</option>
+                <option val='1'>Daily</option>
+                <!--  <option val='2'>Date</option>-->
+                <!--<option val='3'>Sleep</option>-->
+            </select>
+            <input id='data' type='date'></input>
+            <div id='selectors' class='ON' >
+                <span style='display:inline-block; margin:2px'>ON</span>
+                <br>
+                <select id='hours_on'></select><span style='font-size:24px; vertical-align:text-bottom;'>:</span><select id='minutes_on'></select>
+            </div>
+            <br>
+
+            <div id='selectors' class='OFF' >
+                <span style='display:inline-block;margin:2px'>OFF</span>
+                <br>
+                <select  id='hours_off'></select><span style='font-size:24px; vertical-align:text-bottom;'>:</span><select id='minutes_off'></select>
+            </div>
+        </div>
+        <div class="right">&#187;</div>
+    </div>
+    <div style='width:200px;margin:0 auto;'>
+        <div class='number'></div>
+        <div class='send'>Send</div>
+        <div id='loader_a'>Loading...</div>
+    </div>
+</div>
+<h2 id='sleep'> SLEEP </h2>
+<div class='sleep' id='selectors' style='margin: 0 auto;font-size:24px;'>
+    <!--<span style='display:inline-block;font-size:18px' >On</span>-->
+    <!--<span id='sleep_on'>00:00</span>-->
+    <span>Off after</span>
+    <!--
+    <span id='sleep_off' style=' font-weight: 600;'> 00:00</span>
+    -->
+    <br>
+    <select id='sleep_h'></select><span style='font-size:32px; vertical-align:text-bottom;'>:</span><select id='sleep_m'></select>
+
+    <br>
+
+    <div id='sleep_send' class='send'>Send</div>
+    <div id='loader_s'>Loading...</div>
+</div>
+</body>
+</html>

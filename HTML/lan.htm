@@ -1,0 +1,788 @@
+<!doctype html>
+<html>
+<meta http-equiv="Cache-Control" content="no-cache" />
+<meta http-equiv="Pragma" content="no-cache" />
+<script>
+
+//document.addEventListener("DOMContentLoaded", function()
+
+window.onload=function(){
+var select=byId('lan_select');
+//readStatus();
+
+//alert('I am Here !');
+//byClass('lantype').value=select.options[0].text;
+select.selectedIndex=0;
+select.addEventListener('change',function(){
+ changeSelect();
+});
+
+byId('lan_setup').addEventListener('click',function(){
+ console.log('Click header lan'); 
+  if(lanshow)lanShow();
+  else lanHide();
+});
+
+byId('wan_setup').addEventListener('click',function(){
+  console.log('Click header wan');
+   if(wanshow) wanShow();
+   else  wanHide();     
+});
+
+
+
+byId('date_setup').addEventListener('click',function(){
+  if(dateshow)dateShow(); 
+  else dateHide();  
+});
+
+byId('mqtt_setup').addEventListener('click',function(){
+  if(mqttshow)mqttShow(); 
+  else mqttHide();  
+});
+
+byId('update_setup').addEventListener('click',function(){
+ if(updateshow) updateShow();
+  else updateHide();
+});
+
+byId('loader').addEventListener('click',function(){if(loader){readStatus()};});
+byId('wanloader').addEventListener('click',function(){if(loader){readStatus()};});
+}
+
+
+function byId(id){return document.getElementById(id)};
+function byClass(id){return document.getElementsByClassName(id)[0]};
+function byClassi(id,i){return document.getElementsByClassName(id)[i]};
+function byTag(id){return document.getElementsByTagName(id)[0]};
+var lanshow=true;
+var wanshow=true;
+var loader=false;
+var dateshow=true;
+var mqttshow=true;
+var updateshow=true;
+var boot='unknow';
+var version='unknow';
+var sum=0x0000;
+//var urladdress='http://127.0.0.1:3000';
+//var urladdress='http://10.10.10.1';
+//var urladdress='http://192.168.88.254';
+var urladdress=window.location;
+console.log(urladdress);
+function dateShow(){
+   readDate()
+   byId('date_form').style.display='block';
+   byId('date_setup').style.backgroundColor='rgba(25, 255, 7, 0.32)'; 
+   dateshow=false
+   lanHide();
+   wanHide();   
+   showSystemDate(); 
+   showSystemTime();  
+   var showTime=setInterval(showSystemTime,1000);
+}
+function dateHide(){
+  byId('date_form').style.display='none';
+  byId('date_setup').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+  dateshow=true;
+  //clearInterval(showTime);
+}
+function showSystemTime(){
+  var now=new Date();
+  var hour = now.getHours();
+   if (hour<10) hour='0'+hour; 
+  var minute = now.getMinutes();
+   if (minute<10) minute='0'+minute; 
+  var second = now.getSeconds();
+  if (second<10) second='0'+second; 
+  byId('systemTime').innerHTML=hour+':'+minute+':'+second;
+  //showSystemDate();
+}
+function showSystemDate(){
+  var now=new Date();
+  var year=now.getFullYear();
+  var month=now.getMonth()+1;
+  if (month<10) month='0'+month;
+  var date=now.getDate();
+  if (date<10) date='0'+date;
+  //console.log(now);
+  //console.log(date+"/"+month+"/"+year);
+  byId('systemDate').innerHTML=date+"/"+month+"/"+year; 
+}
+function lanShow(){
+  readStatus();
+  byId('lan_form').style.display='block';
+  byId('lan_setup').style.backgroundColor='rgba(25, 255, 7, 0.32)';
+  lanshow=false;
+  wanHide();
+  dateHide();
+}
+function lanHide(){
+  byId('lan_form').style.display='none';
+  byId('lan_setup').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+  lanshow=true;
+}
+function wanShow(){
+  readStatus();
+  byId('wan_form').style.display='block';
+  byId('wan_setup').style.backgroundColor='rgba(25, 255, 7, 0.32)'; 
+  wanshow=false;  
+  lanHide();
+  dateHide();
+  
+}
+function wanHide(){
+  byId('wan_form').style.display='none';
+  byId('wan_setup').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+  wanshow=true;  
+}
+function mqttShow(){
+ readMqttServer();
+ byId('mqtt_form').style.display='block';
+ byId('mqtt_setup').style.backgroundColor='rgba(25, 255, 7, 0.32)';
+ mqttshow=false; 
+ }
+function mqttHide(){
+  byId('mqtt_form').style.display='none';
+  byId('mqtt_setup').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+  mqttshow=true;  
+ }
+function updateShow(){
+  console.log('Update Show');
+  boot='unknow';
+  version='unknow';
+  //byId('update_form').style.display='block';
+  byId('lbl_boot').style.display='block'; 
+  byId('update_setup').style.backgroundColor='rgba(25, 255, 7, 0.32)';
+  byId('update_form').style.display='none';
+  byId('lbl_boot').innerHTML='BOOT ROM:'+boot;
+  updateshow=false;  
+  byId('progress').value=0;
+  request('/boot?');
+ }
+function updateHide(){
+ byId('update_form').style.display='none';
+ byId('update_setup').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+ byId('lbl_boot').style.display='none';
+ byId('uploaded').innerHTML='';
+ byId('progress').style.display='none';
+ updateshow=true; 
+ 
+ }
+function readStatus(){
+ console.log('read status');
+ byId('loader').innerHTML='Loading...';
+ byId('wanloader').innerHTML='Loading...';
+ byClass('lanssid').value='';
+ byClass('lanpwd').value='';
+ byId('wan_select').value='';
+  //select.selectedIndex=0;
+ byClass('wanpwd').value='';
+ loader=false;
+request('/lan_status?');}
+function readDate(){
+ byId('deviceDate').innerHTML="";
+ byId('deviceTime').innerHTML="";
+ byId('dateloader').innerHTML='Loading ...';
+ loader=false;
+ request('/date?');
+}
+
+function readMqttServer(){
+ byId('mqttHost').value="";
+  byId('mqttPort').value="";
+  byId('mqttUser').value="";
+  byId('mqttPwd').value="";
+  byId('mqttrTopic').value="";
+  byId('mqttwTopic').value=""; 
+ request('/mqttServer?');
+
+}
+
+function deviceDate(data){
+  byId('dateloader').innerHTML='Load OK';
+  var data=data.split('&');
+   //console.log(data);
+   var y=data[1];
+   y="20"+y;
+   var m=data[2];
+   if(m<10)m='0'+m;
+   var d=data[3];
+   if(d<10) d='0'+d;
+   var h=data[4]; 
+   if(h<10)h='0'+h;
+   var min=data[5];
+   if(min<10) min='0'+min;
+   var sec=data[6];
+   if(sec<10) sec='0'+sec;  
+   byId('deviceDate').innerHTML=d+'/'+m+'/'+y;
+   byId('deviceTime').innerHTML=h+':'+min+ ':'+ sec;  
+}
+function changeSelect(){
+ var value=byId('lan_select').value;
+ console.log(value);
+ //byClass('lantype').value=byId('lan_select').options[value].text;
+}
+
+function readBootVersion(data){
+    console.log(data);
+   var data=data.split('&');
+     boot=data[1];
+	 version=data[3];
+	 byId('update_form').style.display='block';
+	 byId('lbl_boot').innerHTML='BOOT ROM:'+boot;
+	 if (boot==='0'){
+	 byId('lbl_update').innerHTML='File to Update: user2.1024.new.2.bin';
+	 } else{
+	 byId('lbl_update').innerHTML='File to Update: user1.1024.new.2.bin';
+	 }
+	 //updateShow();
+ }
+
+function espData(data){
+  console.log(data);
+    loader=true;
+    byId('loader').innerHTML='Load done!';
+	byId('wanloader').innerHTML='Load done!';
+   var data = data.split('&');  
+     //console.log(data.length);   
+    for(i=1;i<data.length;i++){
+	   switch(i){
+	     case 1:
+		  byClass('lanssid').value=data[i];
+		  //alert(data[i]);
+		  break;
+		 case 2:
+		  byClass('lanpwd').value=data[i];
+		  //alert(data[i]);
+		  break;
+		 case 3:	
+		  var value=data[i];
+		   if(value<6 && value>0)
+		   {
+		    //byClass('lantype').value=byId('lan_select').options[value].text;
+			byId('lan_select').value=value;
+		    //byClass('lantype').value=byId('sec').options(value).value;  
+		   }
+		   else
+		   {
+		      //byClass('lantype').value='OPEN';
+		   }		  
+         break;		
+		 case 4:
+		   var value=data[i];
+		    if ( value !=null){
+			 if(value ==='1'){
+		    byId('chkBoxLan').checked=true;  
+		   }else{
+		    byId('chkBoxLan').checked=false;  
+		   }
+			
+			}
+         case 5:
+           var value=data[i];
+		      //console.log(value);
+             if (value !=null){
+			 byId('wan_select').options.length=0;
+			 var option=document.createElement('option');
+			 option.text=value;
+	         byId('wan_select').add(option);
+			 byId('scan').value='Scan';
+			}
+		 break;
+         case 6:
+		   var value=data[i];
+		      console.log(value);
+             if (value !=null){byClass('wanpwd').value=value;}
+	     break;	
+         case 7:
+		   var value=data[i];
+		    if ( value !=null){
+			 if(value ==='1'){
+		    byId('chkBoxWan').checked=true;  
+		   }else{
+		    byId('chkBoxWan').checked=false;  
+		   }
+			
+			}		 
+	     case 8:
+		   var value= data[i];
+		   console.log(value);
+		   if(value ==='1')
+		   {
+		    var value='SSID is Connected ! IP:'+data[i+1];
+		    byId('wanssid').innerHTML=value;		    
+		   }
+		    else {byId('wanssid').innerHTML='SSID'};
+		 break;	 
+		 case 10:
+		   var rssi=data[i];
+		   console.log('rssi:'+rssi);
+		   if (rssi !='31'){
+		   rssi=Number(rssi);
+		   rssi=100+rssi;
+		   console.log('rssi:'+rssi);
+		   if(rssi<=15){
+		   byId('prgRSSI').style.color='red';
+		   } else {
+		     byId('prgRSSI').style.color='green';
+		   }
+		    
+		   byId('prgRSSI').value=rssi;
+		   byId('prgRSSI').style.display='inline';
+		   }else{
+		     byId('prgRSSI').style.display='none';
+		   }console.log('rssi:'+rssi);
+		   break;
+	   }    	
+     }
+ }
+ 
+function saveMqttServer(){
+  console.log('Push Save mqtt server button');
+  //byId('mqttHost').value
+  request('/mqttServerSave?');
+  return false;
+}
+
+function reset_esp(){
+  console.log('Push Reset button');
+  request('/esp8266Reset?');
+  return false;
+}
+
+function testMqttServer(){
+  console.log('Push Test mqtt server button');
+  
+  var send='/mqttServer='+'&'+byId('mqttHost').value +'&'+byId('mqttPort').value +'&'+byId('mqttUser').value+'&'+byId('mqttPwd').value+'&'+byId('mqttrTopic').value+'&'+byId('mqttwTopic').value+'&';
+  byId('mqttHost').value="";
+  byId('mqttPort').value="";
+  byId('mqttUser').value="";
+  byId('mqttPwd').value="";
+  byId('mqttrTopic').value="";
+  byId('mqttwTopic').value="";   
+  //console.log(send);
+  request(send);
+  return false;
+}
+ 
+ function respondMqttServer(data){
+     var data = data.split("&");
+     //console.log(data);  
+       // console.log	((data[1].split("host=")).slice(1)); 
+	   //console.log('Number:'+byClass('inpmqttsrv').length);
+	   
+	   if((data[0].split("mqttserver=")).slice(1)==1){
+       var i=0;
+	   while(byClassi('inpmqttsrv',i)!=undefined){
+	     byClassi('inpmqttsrv',i).style.backgroundColor='rgba(25, 255, 7, 0.32)';
+		 i++;
+	   }		   
+	   }else{
+	    var i=0;
+	    while(byClassi('inpmqttsrv',i)!=undefined){
+	     byClassi('inpmqttsrv',i).style.backgroundColor='Crimson';
+		 i++;
+	      }		   	    
+	     }
+	   
+       byId('mqttHost').value=(data[1].split("host=")).slice(1);
+	    byId('mqttPort').value=(data[2].split("port=")).slice(1);
+		 byId('mqttUser').value=(data[3].split("user=")).slice(1);
+		  byId('mqttPwd').value=(data[4].split("pwd=")).slice(1);
+		   byId('mqttrTopic').value=(data[5].split("rtopic=")).slice(1);
+		    byId('mqttwTopic').value=(data[6].split("wtopic=")).slice(1);
+			
+	
+ }
+ 
+function request(url){
+   //alert("Call me!!");
+  var xhr = new XMLHttpRequest(); 
+  xhr.onreadystatechange=function(event){
+   if(xhr.readyState === 4 && xhr.status === 200){
+     //alert("Call me from Ajax!!");
+	  //console.log(xhr.responseText);
+	  //console.log(xhr.responseText.search('scanwifi='));
+	  //console.log(xhr.responseText.search('status='));
+	   if(xhr.responseText.search('status=')==0){ 
+	    espData(xhr.responseText);
+	   }
+	    else if(xhr.responseText.search('scanwifi=')==0){
+	     scanWifiResult(xhr.responseText);
+	   }
+	   else if(xhr.responseText.search('date=')==0){
+	     deviceDate(xhr.responseText);
+	   }
+	   else if(xhr.responseText.search('boot=')==0){
+	     readBootVersion(xhr.responseText);
+	   } else if(xhr.responseText.search('mqttserver')==0){
+	      respondMqttServer(xhr.responseText);
+	      //console.log(xhr.responseText);
+	   } else if(xhr.responseText.search('Mqtt Server')==0) {
+	      alert(xhr.responseText);
+		  readMqttServer();
+	   }  else if(xhr.responseText.search('ESP rebooted')==0) {
+	      alert(xhr.responseText);
+		  //readMqttServer();
+	   }
+	   
+    } else if(xhr.readyState === 4 && xhr.status===0){
+	if(url==='/scanwifi?'){byId('scan').value='Scan Error !';}
+	if(url==='/lan_status?'){
+	 byId('loader').innerHTML='Load Error!';
+	 byId('wanloader').innerHTML='Load Error!';
+	 byId('dateloader').innerHTML='Load Error!';
+	 loader=true;}
+	}
+  }
+  xhr.open("POST",urladdress+url+"="+Math.random(),true);
+  xhr.send();
+}
+function LanSub(){
+ console.log('Lan submit');
+ //console.log(select.value);
+ var chk=0;
+ if(byId('chkBoxLan').checked===true)chk=1;
+ var send='/lanform='+'&'+byClass('lanssid').value +'&'+byClass('lanpwd').value +'&'+byId('lan_select').value+'&'+chk;
+ console.log(send);
+ request(send);
+ return false;
+}
+function WanSub(){
+ console.log('Wan submit');
+ //console.log(select.value);
+ var chk=0;
+ if(byId('chkBoxWan').checked===true)chk=1;
+ var send='/wanform='+'&'+byId('wan_select').value +'&'+byClass('wanpwd').value+'&'+chk;
+ console.log(send);
+ request(send);
+ return false;
+}
+function UpdateSub(s){
+console.log('Update Submit');
+
+//console.log(s);
+var f= byId('fileUpdate').files[0];
+//console.log(f);
+if (f===undefined || f===null){
+  alert("No file Select");
+  return false;
+}
+if(boot==0){
+  if(f.name!='user2.1024.new.2.bin'){
+    alert('Wrong bin file');
+	return false;
+  }
+}
+
+if(boot==1){
+ if(f.name!='user1.1024.new.2.bin'){
+    alert('Wrong bin file');
+	return false;
+  }
+}
+
+
+ if(sum===0 || sum==undefined) {
+  alert('Check Sum Error'+sum);
+ return;
+ }
+ 
+var xhr = new XMLHttpRequest();
+xhr.open('POST',urladdress+'/update/name='+f.name+'/size='+f.size+'/sum='+sum,true);
+//xhr.open('POST',urladdress+'/update/name='+f.name+'/size='+f.size,true);
+
+ xhr.upload.onprogress= function(e){
+  var progress=(e.loaded/e.total)*100;
+   //console.log('Progress:'+progress);
+    byId('progress').value=progress;
+   //console.log('Progress:'+e.total);  
+ }
+ 
+ xhr.onloadstart =function(e){
+   console.log('Start');
+   byId('progress').style.display='inline';
+    byId('progress').value=5;  
+ }
+ 
+ xhr.onloadend = function(e){
+   console.log('End');
+   byId('uploaded').innerHTML='File upload done!';
+ } 
+ 
+xhr.onload =function(oEvent){
+    if(xhr.readyState === 4 && xhr.status === 200){
+	
+	console.log('File Uploaded:'+xhr.responseText);
+	//console.log('LRC:'+xhr.responseText.search('done.LRC:OK'));
+     if(xhr.responseText.search('Wrong')==0){
+	   //byId('progress').value=0;
+	   byId('progress').style.display='none';
+	   //alert(xhr.responseText);
+	 }else if(xhr.responseText.search('done.LRC:OK')==14){
+	    //File succesufull uploaded if corect Check Sum Change Boot and Reboot....
+		 console.log('File uploded done!');
+		 //confirm('Change boot ROM ?');		 
+	      if(confirm('Change boot ROM ?')==true){
+		      console.log('Change boot ROM !!!');
+			  ChangeBoot();
+		    } else {
+		         alert('No Change Boot');		    
+		      }		 	 
+	 }else {alert(xhr.responseText);}
+	 
+	}
+  };
+ xhr.send(f);
+ return false;
+}
+function ChangeBoot(){
+  console.log('Call changeboot.....');
+ request('/changeBoot?');
+}
+function CheckSum(){
+ var f= byId('fileUpdate').files[0];
+ if (f===undefined || f===null){
+  return false;
+  }
+  var fr = new FileReader();
+  var ready=false;
+   sum =  0x00;  
+ fr.onload =  function(e) {
+    var rawData=new Int8Array(e.target.result);
+	console.log(rawData.length);
+	if(rawData.length>450000){
+	 alert('File is too big');
+	 byId('update').style.display='none';
+	}else byId('update').style.display='inline';
+    for(i=0;i<rawData.length;i++){
+    sum=(sum^rawData[i])&0xff;	
+	}
+	//if(sum<0){sum=Math.abs(sum) +128};
+	//console.log('Check Sum:'+sum);
+	return sum;
+	//return sum=sum.toString(16);
+ };
+  fr.readAsArrayBuffer(f);
+}
+function MqqtSub(e){
+console.log('Push Send me mqtt....');
+console.log(e);
+console.log(e.originalEvent.explicitOriginalTarget);
+console.log(e.target.id);
+return false;
+}
+function DateSub(){
+  console.log('Date submit');
+  var now=new Date();
+  var hour = now.getHours();
+  var minute = now.getMinutes();
+  var second = now.getSeconds();
+  var year=now.getFullYear();
+  year=year-2000;
+  var month=now.getMonth()+1;
+  var date=now.getDate();
+  var day=now.getDay();
+  var send='&'+year+'&'+month+'&'+date+'&'+hour+'&'+minute+'&'+second+'&'+day+'&\n';
+  request('/date='+send);
+  return false;
+}
+function scanWifi(){
+ console.log('Scan Wifi');
+ byId('wanssid').innerHTML='SSID'
+ byClass('wanpwd').value=null;
+ byId('scan').value='Scanning...';
+ request('/scanwifi?');
+}
+function scanWifiResult(data){
+  //Create wan_select options base in data
+     //console.log(data);
+	byId('scan').value='Scan done!';	
+	var  wan_select=byId('wan_select');
+	wan_select.options.length=0;
+    var data = data.split('&');
+	 for(i=1;i<data.length;i++){
+	   //console.log(data[i]); 
+       var option=document.createElement('option');	   
+	   option.text=data[i];
+	   wan_select.add(option);
+	 }
+}
+function openFile(e){
+ console.log('OpenFile:'+e);
+ 
+}
+</script>
+
+<style>
+
+table {width:15%;
+        margin-left:auto;
+        margin-right:auto;
+}
+th,td {display: inline-block;
+       border-radius: 8px;
+  
+}
+
+th {background-color: rgba(128, 128, 128, 0.48);margin:5px;width: 300px;height:38px;font-size:30px;}
+td {text-align:center;display:none;}
+a {text-decoration:none;color:black;display:block;width:100%;}
+body{text-align:center;}
+label{display:block;text-align:center;}
+input,select {border-radius:8px;outline:none;}
+select{border-width:2px;;-webkit-appearance: none;-moz-appearance: none;appearance:none;width:172px;height:20px;border-style:solid;,input}
+select::-ms-expand { display: none;}  
+/*input.lantype:hover #lan_select{visibility:visible;}*/
+form {display:inline-block; text-align:center;}
+/*form#lan_form,#wan_form,#date_form,#mqtt_form,#update_form{display:none;}*/
+#send{margin:7px;}
+#scan{margin:5px 0 3px;}
+label#loader,#wanloader{cursor:pointer;}
+.inpmqttsrv{background-color:rgba(128, 128, 128, 0.48)};
+
+</style>
+
+<title> ESP8266 LAN</title>
+
+<body>
+
+<table>
+<tr>
+  <th style='background-color:white;' >SETUP</th>
+</tr>
+<tr>
+  <th id='lan_setup'> LAN </th>
+   <td id='lan_form' >
+     <form autocomplete='off' onSubmit='return LanSub()'>
+     <label>SSID</label>
+     <input type='text' class='lanssid' list='list_ssid' name='ssid' required>
+     <label>PASSWORD </label> 
+     <input class='lanpwd' type='password' name='pwd' pattern='^.{8,}$' title='Password can not be shorter that 8 chars.Also,cant contains only numbers' required >
+     <br>
+     <labeL>TYPE</label>
+     <label>
+     <select id='lan_select'>
+     <option value='0'>OPEN</option>
+	 <option value='1'>WEP</option>
+	 <option value='2'>WPA_PSK</option>
+	 <option value='3'>WPA2_PSK</option>
+	 <option value='4'>WPA_WPA2_PSK</option>
+	 <option value='5'>MAX</option> 
+     </select>
+     </label>
+     
+	 <br>
+	 <label>ON/OFF</label>
+     <input id='chkBoxLan' type='checkbox'>
+	 <br>
+	 <!--
+      <input class='lantype' name='security' pattern='(^OPEN|WEP|WPA_PSK|WPA_WPA2_PSK|AUTH_WPA_WPA2_PSK|MAX)' title='OPEN,WEP,WPA_PSK,WPA_WPA2_PSK,AUTH_WPA_WPA2_PSK,MAX' required >-->
+     <input id='send'  type="submit" value='Save'>
+      <label id='loader'></label>
+     </form>
+  </td>
+</tr>
+<tr>
+  <th id='wan_setup'> WAN </th>
+    <td id='wan_form'>
+	  <form   autocomplete='off' onSubmit='return WanSub()'>
+		  <label id='wanssid'>SSID</label> 
+		  <label>
+		  <select id='wan_select'> 
+		  </select>
+		  </label>
+		  <input id='scan' type='button' value='Scan' onclick='scanWifi()'>
+		  <!--<input  class='wan_ssid' name='wan_ssid'   required>-->
+		  <label>PASSWORD</label>
+		  <input type='password' class='wanpwd' required >
+		  <br>
+		  <label>ON/OFF</label>
+		   <input id='chkBoxWan' type='checkbox'>
+		   <br>
+		  <input id='send' type="submit" value='Save'>
+		  <label id='wanloader'></label>
+		  <progress id='prgRSSI' style='display:none' value="0" min="0" max="70"></progress>
+	  </form>
+  </td>
+    <!--<td> some info </td>-->
+</tr>
+<tr>
+  <th>
+   <a style='text-decoration: none;color:black;' href="./program.html">
+    PROGRAM
+   </a>  
+  </th>
+</tr>
+<tr>
+  <th>
+   <a style='text-decoration: none;color:black;' href="./info.html">
+    INFO
+   </a>  
+  </th>
+</tr>
+<tr>
+  <th id='date_setup'>DATE</th>
+   <td id='date_form'>
+    <form  autocomplete='off' onSubmit='return DateSub()' >
+	<label> Device Date </label>
+	<label id='deviceDate'></label>
+	<label id='deviceTime'></label>
+	<label> System Date </label>
+	<label id='systemDate'></label>
+	<label id="systemTime"></label> 
+	<input id='send' type="submit" value='Save'>
+	<label id='dateloader'></label>
+	</form>
+   </td>
+</tr>
+<tr>
+  <th id='mqtt_setup'>MQTT SERVER</th>
+   <td id='mqtt_form'>
+   	<form autocomplete='off'  >  <!-- onSubmit='return MqqtSub(event)'-->
+	<label>  MQTT SERVER HOST </label>
+	<input class='inpmqttsrv' id='mqttHost' type='text' >
+	<label> MQTT SERVER PORT </label>
+	<input class='inpmqttsrv' id='mqttPort' type='text' >
+	<label> MQTT USER </label>
+	<input class='inpmqttsrv' id='mqttUser' type='text' >
+	<label> MQTT PASSWORD </label>
+	<input class='inpmqttsrv' id='mqttPwd' type='text' >
+	<label>MQTT READ TOPIC </label>
+	<input class='inpmqttsrv' id='mqttrTopic' type='text' >
+	<label>MQTT WRITE TOPIC</label>
+	<input class='inpmqttsrv' id='mqttwTopic' type='text' >
+	<br>
+	<input type='submit' value='Test' id='send' onclick='return testMqttServer()' >
+	<br>
+	<input type='submit' value='Save' id='send'  onclick='return saveMqttServer()' >
+	<br>
+	<input type='submit' value='Reset' id='send'  onclick='return reset_esp()' >
+	</form>
+   </td>
+</tr>
+<tr>
+  <th id='update_setup' >OTA UPDATE</th>
+   <td id='update_form'>
+	<label  id='lbl_boot' > </label>
+	<form autocomplete='off' onSubmit='return UpdateSub()' >
+	<label id='lbl_update'> File to Update </label>
+	<input type='file'  id='fileUpdate' NAME="fileName" SIZE="35" MAXLENGTH="255" accept='.bin'  onchange='CheckSum()' >
+	<br>
+	<input type='submit' value='Update' id='update' >
+	</form>
+	<progress id='progress' style='display:none' value='0' max='100'></progress>
+	<label id='uploaded'></label>
+   </td>
+</tr>
+<!--<tr> 
+   <th>
+    <a href="./" >
+      BACK    
+    </a>
+  </th> 
+</tr>
+-->
+</table>
+</body>
+</html>

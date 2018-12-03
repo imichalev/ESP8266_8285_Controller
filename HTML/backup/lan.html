@@ -1,0 +1,325 @@
+<!doctype html>
+<html>
+<meta http-equiv="Cache-Control" content="no-cache" />
+<meta http-equiv="Pragma" content="no-cache" />
+<script>
+
+//document.addEventListener("DOMContentLoaded", function()
+
+window.onload=function(){
+var select=byId('lan_select');
+//readStatus();
+
+//alert('I am Here !');
+//byClass('lantype').value=select.options[0].text;
+select.selectedIndex=0;
+select.addEventListener('change',function(){
+ changeSelect();
+});
+
+byId('lan_setup').addEventListener('click',function(){
+ lanSetup();
+});
+
+byId('wan_setup').addEventListener('click',function(){
+ wanSetup();
+});
+
+byId('loader').addEventListener('click',function(){if(loader){readStatus()};});
+
+byId('wanloader').addEventListener('click',function(){if(loader){readStatus()};});
+
+}
+function byId(id){return document.getElementById(id)};
+function byClass(id){return document.getElementsByClassName(id)[0]};
+function byTag(id){return document.getElementsByTagName(id)[0]};
+var lanshow=true;
+var wanshow=true;
+var loader=false;
+//var sel=byId('lan_select');
+
+function lanSetup(){
+  console.log('Click header lan');
+  var lan_form=byId('lan_form').style;
+  
+  if(!wanshow)
+	 {
+	   byId('wan_form').style.display='none';
+	   byId('wan_setup').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+	   wanshow=true;
+	 }
+   if(lanshow)
+	 {
+	  //console.log(lanshow);  
+	  //lan_form.transition={opacity 0.8s linear};
+	  readStatus();
+	  lan_form.display='block';
+	  byId('lan_setup').style.backgroundColor='rgba(25, 255, 7, 0.32)';
+	  lanshow=false;
+	 }
+	 else
+	 {
+	   //console.log(lanshow);
+   	   lan_form.display='none';
+	   byId('lan_setup').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+	   lanshow=true;
+	 }
+}
+
+function wanSetup(){
+ console.log('Click header wan');
+  var wan_form=byId('wan_form').style; 
+     if(!lanshow)
+	 {
+	   byId('lan_form').style.display='none';
+	    byId('lan_setup').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+	   lanshow=true;
+	 }
+   if(wanshow)
+	 {
+	  //console.log(lanshow);  
+	  //lan_form.transition={opacity 0.8s linear};
+	   wan_form.display='block';
+	   byId('wan_setup').style.backgroundColor='rgba(25, 255, 7, 0.32)';
+	   readStatus();
+	  wanshow=false;
+	 }
+	 else
+	 {
+	   //console.log(lanshow);
+   	   wan_form.display='none';
+	    byId('wan_setup').style.backgroundColor='rgba(128, 128, 128, 0.48)';
+	   wanshow=true;
+	 }
+}
+function readStatus(){
+console.log('read status');
+ byId('loader').innerHTML='Loading...';
+ byId('wanloader').innerHTML='Loading...';
+ byClass('lanssid').value='';
+ byClass('lanpwd').value='';
+ byId('wan_select').value='';
+  //select.selectedIndex=0;
+ byClass('wanpwd').value='';
+ loader=false;
+request('/lan_status?');}
+
+
+function changeSelect(){
+ var value=byId('lan_select').value;
+ console.log(value);
+ //byClass('lantype').value=byId('lan_select').options[value].text;
+}
+
+function espData(data){
+  console.log(data);
+    loader=true;
+    byId('loader').innerHTML='Load done!';
+	byId('wanloader').innerHTML='Load done!';
+   var data = data.split('&');  
+     //console.log(data.length);   
+    for(i=1;i<data.length;i++){
+	   switch(i){
+	     case 1:
+		  byClass('lanssid').value=data[i];
+		  //alert(data[i]);
+		  break;
+		 case 2:
+		  byClass('lanpwd').value=data[i];
+		  //alert(data[i]);
+		  break;
+		 case 3:	
+		  var value=data[i];
+		   if(value<6 && value>0)
+		   {
+		    //byClass('lantype').value=byId('lan_select').options[value].text;
+			byId('lan_select').value=value;
+		    //byClass('lantype').value=byId('sec').options(value).value;  
+		   }
+		   else
+		   {
+		      //byClass('lantype').value='OPEN';
+		   }
+		  
+         break;		
+         case 4:
+           var value=data[i];
+		      //console.log(value);
+             if (value !=null){
+			 byId('wan_select').options.length=0;
+			 var option=document.createElement('option');
+			 option.text=value;
+	         byId('wan_select').add(option);
+			 byId('scan').value='Scan';
+			}
+		 break;
+         case 5:
+		   var value=data[i];
+		      console.log(value);
+             if (value !=null){byClass('wanpwd').value=value;}
+	     break;
+	     case 6:
+		   var value= data[i];
+		   console.log(value);
+		   if(value ==='1')
+		   {
+		    var value='SSID is Connected ! IP:'+data[i+1];
+		    byId('wanssid').innerHTML=value;		    
+		   }
+		    else {byId('wanssid').innerHTML='SSID'};
+		 break;	 
+	   }    	
+     }
+ }
+ 
+
+
+ function request(url){
+   //alert("Call me!!");
+  var xhr = new XMLHttpRequest();  
+  xhr.onreadystatechange=function(event){
+   if(xhr.readyState === 4 && xhr.status === 200){
+     //alert("Call me from Ajax!!");
+	  //console.log(xhr.responseText);
+	  //console.log(xhr.responseText.search('scanwifi='));
+	  //console.log(xhr.responseText.search('status='));
+	   if(xhr.responseText.search('status=')==0)
+	   {
+	    espData(xhr.responseText);
+	   }
+	    if(xhr.responseText.search('scanwifi=')==0)
+	   {
+	     scanWifiResult(xhr.responseText);
+	   }
+    } else if(xhr.readyState === 4 && xhr.status===0){
+	if(url==='/scanwifi?'){byId('scan').value='Scan Error !';}
+	if(url==='/lan_status?'){byId('loader').innerHTML='Load Error!';byId('wanloader').innerHTML='Load Error!';loader=true;}
+	}
+  }
+  xhr.open("POST","http://10.10.10.1"+url+"="+Math.random(),true);
+  xhr.send();
+}
+
+
+function LanSub()
+{
+ console.log('Lan submit');
+ //console.log(select.value);
+ var send='/lanform='+'&'+byClass('lanssid').value +'&'+byClass('lanpwd').value +'&'+byId('lan_select').value;
+ console.log(send);
+ request(send);
+ return false;
+}
+
+
+function WanSub()
+{
+ console.log('Wan submit');
+ //console.log(select.value);
+ var send='/wanform='+'&'+byId('wan_select').value +'&'+byClass('wanpwd').value;
+ console.log(send);
+ request(send);
+ return false;
+}
+function scanWifi()
+{
+ console.log('Scan Wifi');
+ byId('wanssid').innerHTML='SSID'
+ byClass('wanpwd').value=null;
+ byId('scan').value='Scanning...';
+ request('/scanwifi?');
+}
+
+function scanWifiResult(data)
+{
+  //Create wan_select options base in data
+     //console.log(data);
+	byId('scan').value='Scan done!';	
+	var  wan_select=byId('wan_select');
+	wan_select.options.length=0;
+    var data = data.split('&');
+	 for(i=1;i<data.length;i++){
+	   //console.log(data[i]); 
+       var option=document.createElement('option');	   
+	   option.text=data[i];
+	   wan_select.add(option);
+	 }
+}
+
+</script>
+
+<style>
+body{text-align:center;}
+h1,h2 {display:inline-block;margin:10px 0 10px 0;text-align:center;border-radius:8px;cursor:pointer;background-color:rgba(128, 128, 128, 0.48);width:300px;user-select:none;}
+label{display:block;text-align:center;}
+input,select {border-radius:8px;outline:none;}
+select{border-width:2px;;-webkit-appearance: none;-moz-appearance: none;appearance:none;width:172px;height:20px;border-style:solid;,input}
+select::-ms-expand { display: none;}  
+/*input.lantype:hover #lan_select{visibility:visible;}*/
+form {display:inline-block; text-align:center;}
+form#lan_form,#wan_form{display:none;}
+#send{margin:7px;}
+#scan{margin:5px 0 3px;}
+label#loader,#wanloader{cursor:pointer;}
+
+/*
+.loader{ border:10px solid #f3f3f3;
+     border-top:10px solid rgba(128, 128, 128, 0.48);
+	 border-radius:50%;
+	 width:20px;
+	 height:20px;
+	 animation: spin 1.5s linear infinite;
+	 -webkit-animation: spin 1.5s linear infinite;
+	 }
+	 
+@keyframes spin{ 0% {transform: rotate(0deg);} 100%{transform: rotate(360deg);}
+@-webkit-keyframes spin { 0% {transform: rotate(0deg);} 100%{transform: rotate(360deg);}
+} */
+
+
+</style>
+<title> ESP8266 LAN</title>
+<body>
+<h1 id='lan_setup'> SETUP LAN PAGE  </h1>
+<form id='lan_form'  autocomplete='off' onSubmit='return LanSub()'>
+<label>SSID</label>
+ <input type='text' class='lanssid' list='list_ssid' name='ssid' required>
+<label>PASSWORD </label> 
+<input class='lanpwd' type='password' name='pwd' pattern='^.{8,}$' title='Password can not be shorter that 8 chars.Also,cant contains only numbers' required >
+<br>
+<labeL>TYPE</label>
+<label>
+  <select id='lan_select'>
+    <option value='0'>OPEN</option>
+	<option value='1'>WEP</option>
+	<option value='2'>WPA_PSK</option>
+	<option value='3'>WPA2_PSK</option>
+	<option value='4'>WPA_WPA2_PSK</option>
+	<option value='5'>MAX</option> 
+  </select>
+</label>
+
+<!--
+<input class='lantype' name='security' pattern='(^OPEN|WEP|WPA_PSK|WPA_WPA2_PSK|AUTH_WPA_WPA2_PSK|MAX)' title='OPEN,WEP,WPA_PSK,WPA_WPA2_PSK,AUTH_WPA_WPA2_PSK,MAX' required >-->
+<input id='send'  type="submit" value='Save'>
+<label id='loader'>Loading...</label>
+</form>
+<br/>
+
+<h1 id='wan_setup'> SETUP WAN PAGE </h1>
+<form id='wan_form'  autocomplete='off' onSubmit='return WanSub()'>
+<label id='wanssid'>SSID</label> 
+<label>
+  <select id='wan_select'> 
+  </select>
+</label>
+<input id='scan' type='button' value='Scan' onclick='scanWifi()'>
+<!--<input  class='wan_ssid' name='wan_ssid'   required>-->
+<label>PASSWORD</label>
+<input type='password' class='wanpwd' required >
+ <br>
+ <input id='send' type="submit" value='Save'>
+ <label id='wanloader'>Loading...</label>
+</form>
+</body>
+</html>
