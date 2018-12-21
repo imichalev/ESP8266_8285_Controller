@@ -1,7 +1,7 @@
 /*
  * keyboard.c
  *
- *  Created on: 5.01.2017 ã.
+ *  Created on: 5.01.2017 ï¿½.
  *      Author: admin
  */
 
@@ -29,9 +29,13 @@ uint16 level=0;
 #define KEY2_MUX  PERIPHS_IO_MUX_GPIO0_U
 #define KEY2_FUNC FUNC_GPIO0
 #define KEY2_PIN  0
-#define KEY1_MUX  PERIPHS_IO_MUX_GPIO2_U
-#define KEY1_FUNC FUNC_GPIO2
-#define KEY1_PIN  2
+//#define KEY1_MUX  PERIPHS_IO_MUX_GPIO2_U
+//#define KEY1_FUNC FUNC_GPIO2
+//#define KEY1_PIN  2
+#define KEY1_MUX  PERIPHS_IO_MUX_MTCK_U
+#define KEY1_FUNC FUNC_GPIO14
+#define KEY1_PIN  14
+
 //#define KEYMASK 1<<GPIO_ID_PIN(KEY1_PIN) || 1<<GPIO_ID_PIN(KEY2_PIN) || 1<<GPIO_ID_PIN(KEY3_PIN) || 1<<GPIO_ID_PIN(KEY4_PIN)
 
 void
@@ -194,7 +198,7 @@ InitKeys(void){
 	PIN_FUNC_SELECT(KEY3_MUX,KEY3_FUNC);
 	PIN_PULLUP_EN(KEY3_MUX);
 	GPIO_DIS_OUTPUT(KEY3_PIN);
-	//Key 4 GPIO2;
+	//Key 4 GPIO14;
 	PIN_FUNC_SELECT(KEY4_MUX,KEY4_FUNC);
 	PIN_PULLUP_EN(KEY4_MUX);
 	GPIO_DIS_OUTPUT(KEY4_PIN);

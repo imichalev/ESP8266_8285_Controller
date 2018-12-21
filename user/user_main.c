@@ -9,7 +9,7 @@
 #include "osapi.h"
 #include "user_interface.h"
 //#include "driver/hd44780.h"
-#include "driver/keyboard.h"
+//#include "driver/keyboard.h"
 #include "driver/uart.h"
 //#include "driver/oled.h"
 #include "driver/ds1307.h"
@@ -18,8 +18,9 @@
 #include "driver/wifi.h"
 #include "user_config.h"
 #include "driver/gpio16.h"
-#include "driver/beep.h"
+//#include "driver/beep.h"
 #include "driver/tcpServer.h"
+#include "driver/softuart.h"
 //#include "c_types.h"
 //#include "mqtt/mqtt.h"
 
@@ -31,6 +32,7 @@
  os_timer_t errorTimer;
 rboot_config config_rboot;
 mqttserver mqtt_Server;
+Softuart softuart;
 //static os_timer_t beepTimer;
 static u8 tick;
 #define OFFSETDISPLAY 0
@@ -214,7 +216,14 @@ WifiLanOff() {
 
 
 
+static Check_For_Nextion_Data(void)
+{
+	 if(Softuart_Available(&softuart)) {
+		uint8_t data=Softuart_Read(&softuart);
+		ets_uart_printf("Softuart 1: %c 0x%x \r\n",data,data);
+	}
 
+}
 
 
 
@@ -223,6 +232,11 @@ static ICACHE_FLASH_ATTR
 Main(void){
     //disarm timer
 	os_timer_disarm(&mainTimer);
+
+     //Check for message from Display
+     Check_For_Nextion_Data();
+
+
 	//Check for scaned wifi
  	if(wifiStatus.scaned==1)
 	{
@@ -254,6 +268,25 @@ Main(void){
 		}
 		//softapStatus();
 		//Display();
+		 if(ReadDS1307())
+      {
+    	 //ets_uart_printf("\n\r Timekeeper  is OK !");
+    	  //Read Temperature is found it
+    	 ReadDS1307_Temperature();
+		 volatile char send_toNextion [28];
+		 //send_toNextion=(char*)malloc(28);
+		 //ets_sprintf(temperature,"%c%d.%d",s,t1,t2);
+		 ets_sprintf(send_toNextion,"ThermoControl.t2.txt=\"%s\"%c%c%c",temperature,0xFF,0xFF,0xFF);
+		 Softuart_Puts(&softuart,(const char*)send_toNextion);
+		 //ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
+		 os_delay_us(100);
+		 Check_For_Nextion_Data();
+      }
+     else
+      {
+    	 ets_uart_printf("\n\r TimerKeeper not found!");
+
+      }
 		seconds++;
 		//Sync local time
 		u8 minuteNow;
@@ -279,6 +312,22 @@ Main(void){
 					hours = 0;
 			}
 		}
+
+		 volatile char send_toNextion [28];
+		 ets_sprintf(send_toNextion,"ThermoControl.t3.txt=\"%02d:%02d:%02d\"%c%c%c",hours,minutes,seconds,0xFF,0xFF,0xFF);
+		 Softuart_Puts(&softuart,(const char*)send_toNextion);
+		 //ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
+		  os_delay_us(100);
+		 Check_For_Nextion_Data();
+ 
+         os_memset(send_toNextion, 0, 28);
+		 ets_sprintf(send_toNextion,"ThermoControl.t4.txt=\"%02d.%02d.%02d\"%c%c%c",date,month,year,0xFF,0xFF,0xFF);
+         Softuart_Puts(&softuart,(const char*)send_toNextion);
+		 //ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
+		  os_delay_us(100);
+		 Check_For_Nextion_Data();
+         
+
 
 //		if(displayTimer<=0 && oled.on){
 //			//oled_contrast(0x00);
@@ -519,13 +568,33 @@ Main(void){
 static  ICACHE_FLASH_ATTR
 power_init_pin()
 {
+    //Pin Power GPIO16
+   gpio16_output_conf();
+
 	 //Pin Power
-	PIN_FUNC_SELECT(POWER_MUX,FUNC_GPIO15);
+	//PIN_FUNC_SELECT(POWER_MUX,FUNC_GPIO15);
 	 //Enable Pull DOWN
-	PIN_PULLUP_EN(POWER_MUX);
+	//PIN_PULLUP_EN(POWER_MUX);
 	 //Set as output
     // GPIO_DIS_OUTPUT(POWER_PIN);
 }
+
+
+
+static ICACHE_FLASH_ATTR
+ soft_serial_init()
+ {
+   //GPIO2 RX GPIO0 TX baud 9600
+    Softuart_SetPinRx(&softuart,2);
+	Softuart_SetPinTx(&softuart,15);
+	Softuart_Init(&softuart,9600);
+
+
+
+
+ }
+
+
 
 void ICACHE_FLASH_ATTR
 SystemInitOk()
@@ -551,12 +620,14 @@ SystemInitOk()
 	 changeMenu=false;
 	 maxSelect=MAXMENU;
 	 //keyPress=false;
+
 	 power_init_pin();
-	 InitKeys();
+	 //InitKeys();
+	 soft_serial_init();
 	 //beep_init_pin();
 	 //beep();
 	 //timer1_isr_init();
-	 Beep(0);
+	 //Beep(0);
 	 u8 eeprom;
      //INFO("Hello I am Here \r\n");
 
@@ -619,6 +690,12 @@ SystemInitOk()
     	 //ets_uart_printf("\n\r Timekeeper  is OK !");
     	  //Read Temperature is found it
     	 ReadDS1307_Temperature();
+		 volatile char send_toNextion [28];
+		 //send_toNextion=(char*)malloc(28);
+		 //ets_sprintf(temperature,"%c%d.%d",s,t1,t2);
+		 ets_sprintf(send_toNextion,"ThermoControl.t2.txt=%s",temperature);
+		 Softuart_Puts(&softuart,(const char*)send_toNextion);
+		 ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
       }
      else
       {
