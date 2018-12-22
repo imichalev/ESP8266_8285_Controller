@@ -312,12 +312,13 @@ void Softuart_Putchar(Softuart *s, char data)
 {
 	unsigned i;
 	unsigned start_time = 0x7FFFFFFF & system_get_time();
+     
 
 	//if rs485 set tx enable
-	if(s->is_rs485 == 1)
-	{
-		GPIO_OUTPUT_SET(GPIO_ID_PIN(s->pin_rs485_tx_enable), 1);
-	}
+	// if(s->is_rs485 == 1)
+	// {
+	// 	GPIO_OUTPUT_SET(GPIO_ID_PIN(s->pin_rs485_tx_enable), 1);
+	// }
 
 	//Start Bit
 	GPIO_OUTPUT_SET(GPIO_ID_PIN(s->pin_tx.gpio_id), 0);
@@ -332,6 +333,7 @@ void Softuart_Putchar(Softuart *s, char data)
 	}
 
 	// Stop bit
+	
 	while ((0x7FFFFFFF & system_get_time()) < (start_time + (s->bit_time*9)))
 	{
 		//If system timer overflow, escape from while loop
@@ -340,13 +342,13 @@ void Softuart_Putchar(Softuart *s, char data)
 	GPIO_OUTPUT_SET(GPIO_ID_PIN(s->pin_tx.gpio_id), 1);
 
 	// Delay after byte, for new sync
-	os_delay_us(s->bit_time*6);
+	os_delay_us(s->bit_time*6); //6
 
 	//if rs485 set tx disable 
-	if(s->is_rs485 == 1)
-	{
-		GPIO_OUTPUT_SET(GPIO_ID_PIN(s->pin_rs485_tx_enable), 0);
-	}
+	// if(s->is_rs485 == 1)
+	// {
+	// 	GPIO_OUTPUT_SET(GPIO_ID_PIN(s->pin_rs485_tx_enable), 0);
+	// }
 }
 
 void Softuart_Puts(Softuart *s, const char *c )

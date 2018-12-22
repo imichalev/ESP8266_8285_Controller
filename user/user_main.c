@@ -20,7 +20,8 @@
 #include "driver/gpio16.h"
 //#include "driver/beep.h"
 #include "driver/tcpServer.h"
-#include "driver/softuart.h"
+
+#include "driver/nextion.h"
 //#include "c_types.h"
 //#include "mqtt/mqtt.h"
 
@@ -32,7 +33,7 @@
  os_timer_t errorTimer;
 rboot_config config_rboot;
 mqttserver mqtt_Server;
-Softuart softuart;
+
 //static os_timer_t beepTimer;
 static u8 tick;
 #define OFFSETDISPLAY 0
@@ -216,15 +217,6 @@ WifiLanOff() {
 
 
 
-static Check_For_Nextion_Data(void)
-{
-	 if(Softuart_Available(&softuart)) {
-		uint8_t data=Softuart_Read(&softuart);
-		ets_uart_printf("Softuart 1: %c 0x%x \r\n",data,data);
-	}
-
-}
-
 
 
 
@@ -273,14 +265,7 @@ Main(void){
     	 //ets_uart_printf("\n\r Timekeeper  is OK !");
     	  //Read Temperature is found it
     	 ReadDS1307_Temperature();
-		 volatile char send_toNextion [28];
-		 //send_toNextion=(char*)malloc(28);
-		 //ets_sprintf(temperature,"%c%d.%d",s,t1,t2);
-		 ets_sprintf(send_toNextion,"ThermoControl.t2.txt=\"%s\"%c%c%c",temperature,0xFF,0xFF,0xFF);
-		 Softuart_Puts(&softuart,(const char*)send_toNextion);
-		 //ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
-		 os_delay_us(100);
-		 Check_For_Nextion_Data();
+		 display_themperature((char*)temperature);
       }
      else
       {
@@ -313,19 +298,13 @@ Main(void){
 			}
 		}
 
-		 volatile char send_toNextion [28];
-		 ets_sprintf(send_toNextion,"ThermoControl.t3.txt=\"%02d:%02d:%02d\"%c%c%c",hours,minutes,seconds,0xFF,0xFF,0xFF);
-		 Softuart_Puts(&softuart,(const char*)send_toNextion);
-		 //ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
-		  os_delay_us(100);
-		 Check_For_Nextion_Data();
+         display_time();
+		 display_date();
+		 display_wifi_rssi();
+
+		 
  
-         os_memset(send_toNextion, 0, 28);
-		 ets_sprintf(send_toNextion,"ThermoControl.t4.txt=\"%02d.%02d.%02d\"%c%c%c",date,month,year,0xFF,0xFF,0xFF);
-         Softuart_Puts(&softuart,(const char*)send_toNextion);
-		 //ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
-		  os_delay_us(100);
-		 Check_For_Nextion_Data();
+        
          
 
 
@@ -581,18 +560,7 @@ power_init_pin()
 
 
 
-static ICACHE_FLASH_ATTR
- soft_serial_init()
- {
-   //GPIO2 RX GPIO0 TX baud 9600
-    Softuart_SetPinRx(&softuart,2);
-	Softuart_SetPinTx(&softuart,15);
-	Softuart_Init(&softuart,9600);
 
-
-
-
- }
 
 
 
@@ -690,12 +658,6 @@ SystemInitOk()
     	 //ets_uart_printf("\n\r Timekeeper  is OK !");
     	  //Read Temperature is found it
     	 ReadDS1307_Temperature();
-		 volatile char send_toNextion [28];
-		 //send_toNextion=(char*)malloc(28);
-		 //ets_sprintf(temperature,"%c%d.%d",s,t1,t2);
-		 ets_sprintf(send_toNextion,"ThermoControl.t2.txt=%s",temperature);
-		 Softuart_Puts(&softuart,(const char*)send_toNextion);
-		 ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
       }
      else
       {

@@ -52,7 +52,7 @@ volatile u8 year;
 //volatile u8 on_minute;
 //volatile u8 off_hour;
 //volatile u8 off_minute;
-volatile char temperature[10];
+char temperature[10];
 char lan_ssid[32];
 char lan_pwd[16];
 u8 lan_type;
@@ -82,11 +82,14 @@ bool volatile keypush;
 
 volatile u8 error;
 //volatile u8 wifi_station_try_connect;
-#define POWER_MUX PERIPHS_IO_MUX_MTDO_U
-#define POWER_FUNC FUNC_GPIO15
-#define POWER_PIN 15
-#define POWER_ON GPIO_OUTPUT_SET(POWER_PIN,1)
-#define POWER_OFF GPIO_OUTPUT_SET(POWER_PIN,0)
+
+// #define POWER_MUX PERIPHS_IO_MUX_MTDO_U
+// #define POWER_FUNC FUNC_GPIO15
+// #define POWER_PIN 15
+// #define POWER_ON GPIO_OUTPUT_SET(POWER_PIN,1)
+// #define POWER_OFF GPIO_OUTPUT_SET(POWER_PIN,0)
+#define POWER_ON gpio16_output_set(1)
+#define POWER_OFF gpio16_output_set(0)
 #define WAITTIME 20000 //10 seconds
 #define EXITTIME 1000
 #define EXITTIMEUPDATE 5000
