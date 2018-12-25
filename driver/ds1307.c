@@ -1,7 +1,7 @@
 /*
  * ds1307.h
  *
- *  Created on: 3.02.2017 ã.
+ *  Created on: 3.02.2017 ï¿½.
  *      Author: admin
  */
 
@@ -126,6 +126,36 @@ bool ICACHE_FLASH_ATTR ReadDS1307_Temperature()
 	 return true;
 }
 
+void ICACHE_FLASH_ATTR 
+DS1307_Temperature()
+{
+ 
+   u8 t1=0;
+	 u8 t2=0;
+	 char s='+';
+	 if (msbtemp&0x80) s='-';
+	 switch(lsbtemp>>6)
+	 {
+	 case 1:
+	   t2=25;
+	   break;
+	 case 2:
+	   t2=50;
+	   break;
+	 case 3:
+		t2=75;
+		break;
+	 default :
+   	     t2=0;
+	 }
+     t1=msbtemp&0x7f;
+     ets_sprintf(temperature,"%c%d.%d",s,t1,t2);
+  return;
+}
+
+
+
+
 bool ICACHE_FLASH_ATTR SetTimeDate(u8 set_seconds,u8 set_minutes,u8 set_hours,u8 set_day,u8 set_date, u8 set_month,u8 set_year)
 {
 	if(set_seconds>59) set_seconds=0;
@@ -198,9 +228,9 @@ bool ICACHE_FLASH_ATTR ReadDS1307()
    i2c_master_send_ack();
    u8 agingoffset=i2c_master_readByte();
    i2c_master_send_ack();
-   u8 msbtemp= i2c_master_readByte();
+    msbtemp= i2c_master_readByte();
    i2c_master_send_ack();
-   u8 lsbtemp= i2c_master_readByte();
+    lsbtemp= i2c_master_readByte();
    i2c_master_send_nack();
    i2c_master_stop();
    //ETS_INTR_UNLOCK();

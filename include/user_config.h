@@ -48,6 +48,8 @@ volatile u8 days;
 volatile u8 date;
 volatile u8 month;
 volatile u8 year;
+volatile u8 msbtemp;
+volatile u8 lsbtemp;
 //volatile u8 on_hour;
 //volatile u8 on_minute;
 //volatile u8 off_hour;
