@@ -11,6 +11,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "C:/Espressif/xtensa-lx106-elf/xtensa-lx106-elf/include",
+                "C:/Espressif/xtensa-lx106-elf/lib/gcc/xtensa-lx106-elf/5.2.0/include",
                 "C:/Espressif/ESP8266_SDK/include"
                 
             ],
@@ -19,6 +20,7 @@
                 "path": [
                     "${workspaceFolder}/**",
                     "C:/Espressif/xtensa-lx106-elf/xtensa-lx106-elf/include",
+                    "C:/Espressif/xtensa-lx106-elf/lib/gcc/xtensa-lx106-elf/5.2.0/include",
                     "C:/Espressif/ESP8266_SDK/include"
                 ]
             },

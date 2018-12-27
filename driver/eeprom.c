@@ -1,7 +1,7 @@
 /*
  * eeprom.c
  *
- *  Created on: 3.02.2017 ã.
+ *  Created on: 3.02.2017 ï¿½.
  *      Author: admin
  */
 #include "ets_sys.h"
@@ -125,6 +125,24 @@ bool eeprom_readStaus() {
 	}
 	return true;
 }
+
+
+bool ICACHE_FLASH_ATTR eeprom_read_themperature(){
+	u8 eeprom = eepromReadByte(EEPROM_THEMPERATURE);
+	if (!status.i2creaderror) {
+		if(eeprom>41)eeprom=41;
+		*(u8*) (&themperatureSet) = (u8) eeprom;
+		//ets_uart_printf("\n\r Read program from eerpom:0x%X",program);
+	}
+	return true; 
+}
+
+
+bool ICACHE_FLASH_ATTR eeprom_write_themperature() {
+	eepromWriteByte(EEPROM_THEMPERATURE, *(u8*) (&themperatureSet));
+	return true;
+}
+
 
 ////bool ICACHE_FLASH_ATTR eeprom_readTimer() {
 ////	u8 eeprom;

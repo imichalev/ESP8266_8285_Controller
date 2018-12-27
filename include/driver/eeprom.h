@@ -6,6 +6,7 @@
 #define EEPROM_HOUR_OFF  0x04
 #define EEPROM_MINUTE_OFF 0x05
 #define EEPROM_LAN_TYPE 0x06
+#define EEPROM_THEMPERATURE 0x07 //Byte
 #define EEPROM_WAN_SSID 0x20
 #define EEPROM_WAN_PWD 0x40
 #define EEPROM_LAN_SSID 0x60
@@ -44,6 +45,8 @@ bool eeprom_saveTimer();
 bool eeprom_readProgramer();
 bool eeprom_writeProgramer(u8 number);
 bool eeprom_initProgramer();
+bool eeprom_read_themperature();
+bool eeprom_write_themperature();
 //bool eeprom_writePASSWORD (char *password, u16 address);
 //bool eeprom_writeSSID(char *ssid, u16 address);
 void eeprom_readAray(u16 start,u16 len);

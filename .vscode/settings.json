@@ -1,5 +1,13 @@
 {
     "files.associations": {
-        "ets_sys.h": "c"
+        "ets_sys.h": "c",
+        "tcpserver.h": "c",
+        "softuart.h": "c",
+        "gpio16.h": "c",
+        "ds1307.h": "c",
+        "osapi.h": "c",
+        "user_interface.h": "c",
+        "string.h": "c",
+        "stddef.h": "c"
     }
 }

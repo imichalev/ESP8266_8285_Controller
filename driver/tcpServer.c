@@ -1,7 +1,7 @@
 /*
  * tcpClient.c
  *
- *  Created on: 8.01.2017 ã.
+ *  Created on: 8.01.2017 ï¿½.
  *      Author: admin
  */
 
@@ -138,7 +138,8 @@ chaged_boot_rom(){
 	rboot_write_config(&config);
 	//restar esp8266
 	os_printf("Restarting...\r\n\r\n");
-	GPIO_OUTPUT_SET(POWER_PIN,0);
+	//GPIO_OUTPUT_SET(POWER_PIN,0);
+    POWER_OFF;
 	system_soft_wdt_feed();
 	system_restart();
 }
@@ -1181,7 +1182,8 @@ tcp_server_discon_cb(void *arg) {
 	}
 	else if (reboot==2) {
 		displayString("   R E S T A R T I N G ", 4, 1);
-		GPIO_OUTPUT_SET(POWER_PIN,0);
+		//GPIO_OUTPUT_SET(POWER_PIN,0);
+		POWER_OFF;
 		system_soft_wdt_feed();
 		system_restart();
 	} else if(reboot==3){

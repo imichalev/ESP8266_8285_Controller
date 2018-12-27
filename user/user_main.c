@@ -292,6 +292,7 @@ Main(void)
 		//Sync local time
 		if (seconds % 15 == 0)
 		{
+			//ets_uart_printf("Main 15-second routine Page:%d \n\r",nextionDisplay.pageNumber);
 			//ReadDS1307();
 			if (ReadDS1307())
 			{
@@ -606,7 +607,8 @@ SystemInitOk()
 
 	power_init_pin();
 	//InitKeys();
-	soft_serial_init();
+	nextion_display_init(&nextionDisplay);
+	
 	//beep_init_pin();
 	//beep();
 	//timer1_isr_init();
@@ -628,6 +630,8 @@ SystemInitOk()
 			//eeprom_readTimer();
 			// READ Wifi
 			eeprom_readWifi();
+			//Read Themperature set for Manual;
+			eeprom_read_themperature();
 			//mqttserver mqtt_Server;
 			mqtt_Server = eeprom_readMqttServer();
 			//                 if(!eeprom_readMqttServer()){
@@ -665,7 +669,8 @@ SystemInitOk()
 	//displayTimer=DISPLAYTIMER;
 	//initOledDisplay();
 
-	
+	PageNextion(&nextionDisplay);
+	os_delay_us(10);
     PageNextionDisplay(&nextionDisplay);
 
 	//	eeprom = eepromReadByte(0);

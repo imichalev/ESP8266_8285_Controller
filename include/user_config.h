@@ -81,7 +81,7 @@ u8  maxSelect;
 u8 key;
 bool volatile keypush;
 
-
+uint8_t themperatureSet;
 volatile u8 error;
 //volatile u8 wifi_station_try_connect;
 
