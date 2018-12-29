@@ -12,6 +12,7 @@
 #include "driver/softuart.h"
 #include "user_config.h"
 #include "string.h"
+#include "driver/si7021.h"
 
 
 
@@ -19,35 +20,14 @@
 Softuart softuart;
 char nextionData[50]={0};
 const  char *week_days[]={ "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+//Nextion Display Struct
+nextionDisplay_t nextionDisplay;
+nextionDisplay_t* nextion=&nextionDisplay;   //Global for this class
+
+
 
 void ICACHE_FLASH_ATTR
-soft_serial_init(nextionDisplay_t* nextion)
-{
-  //GPIO2 RX GPIO0 TX baud 9600
-  Softuart_SetPinRx(nextion->softuart, 2);
-  Softuart_SetPinTx(nextion->softuart, 15);
-  Softuart_Init(nextion->softuart, 9600);
-}
-
-
-
-void ICACHE_FLASH_ATTR 
-nextion_display_init(nextionDisplay_t* nextion)
-{
-  nextion->softuart=&softuart;
-  nextion->command=nextionData;
-  soft_serial_init(nextion);
-  //Init Page 0
-  // volatile char send_toNextion[28] = {0};
-  // ets_sprintf(send_toNextion, "page 0%c%c%c", 0xFF, 0xFF, 0xFF);
-  // Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
-  // ets_uart_printf("Send to Nextion Page 0:%s \n",send_toNextion);
-  // Check_For_Nextion_Data(nextion);
-
-}
-
-void ICACHE_FLASH_ATTR
-send_data(nextionDisplay_t* nextion)
+send_data()
 {
     //check if end on 0xFF
     //ets_uart_printf("Call send_data.... \r\n");
@@ -63,73 +43,134 @@ send_data(nextionDisplay_t* nextion)
 
      //ets_uart_printf("Send to Nextion :%s \r\n",nextion->command);
      Softuart_Puts(nextion->softuart, (const char *)nextion->command);
+     os_delay_us(5);
+     Check_For_Nextion_Data();
 }
 
 void ICACHE_FLASH_ATTR
-display_themperature(nextionDisplay_t *nextion, char *temperature)
+soft_serial_init()
 {
-  //volatile char send_toNextion[28] = {0};
-  //ets_sprintf(send_toNextion, "ThermoControl.t2.txt=\"%s\"%c%c%c", temperature, 0xFF, 0xFF, 0xFF);
-  //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
-  ets_sprintf(nextion->command, "ThermoControl.t2.txt=\"%s\"", temperature);
-  send_data(nextion);
-  uint8_t thermo = atoi(temperature);
-  thermo = (thermo - 8) * 3;
-  //ets_sprintf(send_toNextion, "ThermoControl.j1.val=%d%c%c%c", thermo, 0xFF, 0xFF, 0xFF);
-  //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
-  ets_sprintf(nextion->command, "ThermoControl.j1.val=%d", thermo);
-  send_data(nextion);
-  //Send color bar for thermometer
-  uint8_t color;
-  uint16_t colorText;
-  if (thermo < 18)
+  //GPIO2 RX GPIO0 TX baud 9600
+  if(nextion!=NULL)
   {
-    //blue
-    color = THERMO_BLUE;
-    colorText=BLUE;
+  Softuart_SetPinRx(nextion->softuart, 2);
+  Softuart_SetPinTx(nextion->softuart, 15);
+  Softuart_Init(nextion->softuart, 9600);
+  //For First handshake
+  ets_sprintf(nextion->command, "Hello");
+  send_data();
+  //Check_For_Nextion_Data();
+
   }
-  else if (thermo < 42) //22c
-  {
-    //violet
-    color = THERMO_VIOLET;
-    colorText=VIOLET;
-  }
-  else if (thermo < 78) //34C
-  {
-    //orange
-    color = THERMO_ORANGE;
-    colorText=ORANGE;
-  }
-  else if (thermo < 100)
-  {
-    //red
-    color = THERMO_RED;
-    colorText=RED;
-  }
-  //ets_sprintf(send_toNextion, "ThermoControl.j1.ppic=%d%c%c%c", color, 0xFF, 0xFF, 0xFF);
-  //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
-  ets_sprintf(nextion->command, "ThermoControl.j1.ppic=%d", color);
-  send_data(nextion);
-  //ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
-  os_delay_us(10);
-  //ets_sprintf(send_toNextion, "ThermoControl.t2.pco=%d%c%c%c", colorText, 0xFF, 0xFF, 0xFF);
-  //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
-  ets_sprintf(nextion->command, "ThermoControl.t2.pco=%d", colorText);
-  send_data(nextion);
-  //os_delay_us(100);
-  Check_For_Nextion_Data(nextion);
 }
 
 
+
+void ICACHE_FLASH_ATTR 
+nextion_display_init()
+{
+  //nextion=&nextionDisplay;
+  nextion->softuart=&softuart;
+  nextion->command=nextionData;
+  soft_serial_init();
+  //Init Page 0
+  // volatile char send_toNextion[28] = {0};
+  // ets_sprintf(send_toNextion, "page 0%c%c%c", 0xFF, 0xFF, 0xFF);
+  // Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
+  // ets_uart_printf("Send to Nextion Page 0:%s \n",send_toNextion);
+  // Check_For_Nextion_Data(nextion);
+
+}
+
 void ICACHE_FLASH_ATTR
-display_themperature_set(nextionDisplay_t *nextion)
+nextion_power_on()
+{
+  if (nextion->pageNumber == MAINPAGE)
+  {
+    ets_sprintf(nextion->command, "vis p0,1");
+    send_data();
+    //Check_For_Nextion_Data();
+  }
+}
+
+void ICACHE_FLASH_ATTR
+nextion_power_off()
+{
+  if (nextion->pageNumber == MAINPAGE)
+  {
+    ets_sprintf(nextion->command, "vis p0,0");
+    send_data();
+    //Check_For_Nextion_Data();
+  }
+}
+
+void ICACHE_FLASH_ATTR
+display_themperature(char *temperature)
+{
+  if (nextion->pageNumber == MAINPAGE)
+  {
+    //volatile char send_toNextion[28] = {0};
+    //ets_sprintf(send_toNextion, "ThermoControl.t2.txt=\"%s\"%c%c%c", temperature, 0xFF, 0xFF, 0xFF);
+    //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
+    ets_sprintf(nextion->command, "ThermoControl.t2.txt=\"%s\"", temperature);
+    send_data(nextion);
+    uint8_t thermo = atoi(temperature);
+    thermo = (thermo - 8) * 3;
+    //ets_sprintf(send_toNextion, "ThermoControl.j1.val=%d%c%c%c", thermo, 0xFF, 0xFF, 0xFF);
+    //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
+    ets_sprintf(nextion->command, "ThermoControl.j1.val=%d", thermo);
+    send_data();
+    //Send color bar for thermometer
+    uint8_t color;
+    uint16_t colorText;
+    if (thermo < 18)
+    {
+      //blue
+      color = THERMO_BLUE;
+      colorText = BLUE;
+    }
+    else if (thermo < 42) //22c
+    {
+      //violet
+      color = THERMO_VIOLET;
+      colorText = VIOLET;
+    }
+    else if (thermo < 78) //34C
+    {
+      //orange
+      color = THERMO_ORANGE;
+      colorText = ORANGE;
+    }
+    else if (thermo < 100)
+    {
+      //red
+      color = THERMO_RED;
+      colorText = RED;
+    }
+    //ets_sprintf(send_toNextion, "ThermoControl.j1.ppic=%d%c%c%c", color, 0xFF, 0xFF, 0xFF);
+    //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
+    ets_sprintf(nextion->command, "ThermoControl.j1.ppic=%d", color);
+    send_data();
+    //ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
+    //os_delay_us(10);
+    //ets_sprintf(send_toNextion, "ThermoControl.t2.pco=%d%c%c%c", colorText, 0xFF, 0xFF, 0xFF);
+    //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
+    ets_sprintf(nextion->command, "ThermoControl.t2.pco=%d", colorText);
+    send_data();
+    //os_delay_us(100);
+  }
+  //Check_For_Nextion_Data(nextion);
+}
+
+void ICACHE_FLASH_ATTR
+display_themperature_set()
 {
   //volatile char send_toNextion[28] = {0};
   //ets_sprintf(temperature,"%c%d.%d",s,t1,t2);
   //ets_sprintf(send_toNextion, "ThermoControl.t1.txt=\"%d\x9c\"%c%c%c", themperatureSet,0xFF, 0xFF, 0xFF);
   //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
   ets_sprintf(nextion->command, "ThermoControl.t1.txt=\"%d\x9c\"", themperatureSet);
-  send_data(nextion);
+  send_data();
   //ets_uart_printf("Send to Nextion_Themperature_Set:%s \n",send_toNextion);
   uint8_t thermo = themperatureSet;
   thermo = (thermo - 8) * 3;
@@ -168,22 +209,22 @@ display_themperature_set(nextionDisplay_t *nextion)
   //ets_sprintf(send_toNextion, "ThermoControl.j0.ppic=%d%c%c%c", color, 0xFF, 0xFF, 0xFF);
   //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
   ets_sprintf(nextion->command, "ThermoControl.j0.ppic=%d", color);
-  send_data(nextion);
-  os_delay_us(10);
+  send_data();
+  //os_delay_us(10);
   //ets_sprintf(send_toNextion, "ThermoControl.t1.pco=%d%c%c%c", colorText, 0xFF, 0xFF, 0xFF);
   //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
   ets_sprintf(nextion->command, "ThermoControl.t1.pco=%d", colorText);
-  send_data(nextion);
+  send_data();
   //ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
   //os_delay_us(100);
-  Check_For_Nextion_Data(nextion);
+  //Check_For_Nextion_Data();
 }
 
 void ICACHE_FLASH_ATTR
-display_time(nextionDisplay_t *nextion)
+display_time()
 {
   //volatile char send_toNextion[60];
-  if (nextion->displayOk && nextion->pageNumber == 0)
+  if (nextion->displayOk && nextion->pageNumber == MAINPAGE)
   {
     static bool sec = true;
     //ets_sprintf(send_toNextion,"ThermoControl.t3.txt=\"%02d:%02d:%02d\"%c%c%c",hours,minutes,seconds,0xFF,0xFF,0xFF);
@@ -204,50 +245,54 @@ display_time(nextionDisplay_t *nextion)
     //ets_sprintf(send_toNextion,"ThermoControl.t3.txt=\"%02d:%02d:%02d\"",hours,minutes,seconds);
     //ets_sprintf(send_toNextion,"%s\rThermoControl.t4.txt=\"%02d.%02d.%02d\"%c%c%c",send_toNextion,date,month,year,0xFF,0xFF,0xFF);
     //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
-    send_data(nextion);
+    send_data();
     // ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
     //os_delay_us(100);
-    Check_For_Nextion_Data(nextion);
+    //Check_For_Nextion_Data();
   }
 }
 
 void ICACHE_FLASH_ATTR
-display_date(nextionDisplay_t* nextion)
+display_date()
 {
-  //char send_toNextion[28]={0};
-  //ets_sprintf(send_toNextion, "ThermoControl.t4.txt=\"%02d.%02d.%02d\"%c%c%c", date, month, year, 0xFF, 0xFF, 0xFF);
-  //ets_sprintf(send_toNextion, "ThermoControl.t4.txt=\"%02d.%02d\"%c%c%c", date, month,0xFF, 0xFF, 0xFF);
-  //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
-  ets_sprintf(nextion->command, "ThermoControl.t4.txt=\"%02d/%02d\"", date, month);
-  send_data(nextion);
-  //ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
-  //os_delay_us(100);
-  Check_For_Nextion_Data(nextion);
+  if (nextion->displayOk && nextion->pageNumber == MAINPAGE)
+  {
+    //char send_toNextion[28]={0};
+    //ets_sprintf(send_toNextion, "ThermoControl.t4.txt=\"%02d.%02d.%02d\"%c%c%c", date, month, year, 0xFF, 0xFF, 0xFF);
+    //ets_sprintf(send_toNextion, "ThermoControl.t4.txt=\"%02d.%02d\"%c%c%c", date, month,0xFF, 0xFF, 0xFF);
+    //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
+    ets_sprintf(nextion->command, "ThermoControl.t4.txt=\"%02d/%02d\"", date, month);
+    send_data();
+    //ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
+    //os_delay_us(100);
+  }
+  //Check_For_Nextion_Data();
 }
 
 void ICACHE_FLASH_ATTR
-display_day(nextionDisplay_t* nextion)
+display_day()
 {
-  //char send_toNextion[28]={0};
 
-  //ets_sprintf(send_toNextion, "ThermoControl.t6.txt=\"%s\"%c%c%c", week_days[days-1], 0xFF, 0xFF, 0xFF);
-  //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
-  ets_sprintf(nextion->command, "ThermoControl.t6.txt=\"%s\"",week_days[days-1]);
-  send_data(nextion);
-  //ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
-  //os_delay_us(100);
-  Check_For_Nextion_Data(nextion);
+  if (nextion->displayOk && nextion->pageNumber == MAINPAGE)
+  {
+    //char send_toNextion[28]={0};
+
+    //ets_sprintf(send_toNextion, "ThermoControl.t6.txt=\"%s\"%c%c%c", week_days[days-1], 0xFF, 0xFF, 0xFF);
+    //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
+    ets_sprintf(nextion->command, "ThermoControl.t6.txt=\"%s\"", week_days[days - 1]);
+    send_data(nextion);
+    //ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
+    //os_delay_us(100);
+  }
+  //Check_For_Nextion_Data();
 }
 
-
-
-
 void ICACHE_FLASH_ATTR
-display_wifi_rssi(nextionDisplay_t *nextion)
+display_wifi_rssi()
 {
     
   //check for page where rssi display
-  if (nextion->displayOk && nextion->pageNumber == 0)
+  if (nextion->displayOk && nextion->pageNumber == MAINPAGE)
   {
     //ets_uart_printf("Display rssi:\r\n");
     //char send_toNextion[28];
@@ -266,12 +311,12 @@ display_wifi_rssi(nextionDisplay_t *nextion)
     send_data(nextion);
     //ets_uart_printf("Send to Nextion RSSI:%s \n", send_toNextion);
     //os_delay_us(100);
-    Check_For_Nextion_Data(nextion);
+    //Check_For_Nextion_Data();
   }
 }
 
 void ICACHE_FLASH_ATTR
-Validate_Decode_Message(nextionDisplay_t *nextion, uint8_t *msg, uint8_t len)
+Validate_Decode_Message(uint8_t *msg, uint8_t len)
 {
   //Check for valid Command must end 0xff,0xff,0xff and Decode it.
   uint8_t *pmsg = msg;
@@ -320,7 +365,7 @@ Validate_Decode_Message(nextionDisplay_t *nextion, uint8_t *msg, uint8_t len)
             break;
          case 0x1A:
             ets_uart_printf("Variable name invalid:0x%x \r\n",*pmsg);
-            ets_uart_printf("Nextion Command: %s\r\n",nextion->command);
+            ets_uart_printf("Nextion Command:%s\r\n",nextion->command);
             break;
          default:
             //Unknow Command
@@ -330,13 +375,13 @@ Validate_Decode_Message(nextionDisplay_t *nextion, uint8_t *msg, uint8_t len)
       }
     }
   }
-  PageNextionDisplay(nextion);
+  PageNextionDisplay();
   END:
   return;
 }
 
 void ICACHE_FLASH_ATTR
-Check_For_Nextion_Data(nextionDisplay_t* nextion)
+Check_For_Nextion_Data()
 {
   // if(Softuart_Available(&softuart)){
   //  	uint8_t byte=Softuart_Read(&softuart);
@@ -365,45 +410,48 @@ Check_For_Nextion_Data(nextionDisplay_t* nextion)
     //   ets_uart_printf("0x%x ", data[j]);
     // }
     // ets_uart_printf("\r\n");
-    Validate_Decode_Message(nextion,data,i-1);   
+    Validate_Decode_Message(data,i-1);   
   }
 }
 
 void ICACHE_FLASH_ATTR
-PageNextion(nextionDisplay_t *nextion)
+PageNextion(uint8_t page)
 {
   //char send_toNextion[28]={0};
   //ets_sprintf(send_toNextion, "\"sendme\"%c%c%c", 0xFF, 0xFF, 0xFF);
  // Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
   
-  ets_sprintf(nextion->command, "page 0");
-  send_data(nextion);
-  ets_uart_printf("Nextion page 0. \r\n");
-  Check_For_Nextion_Data(nextion);
+  ets_sprintf(nextion->command, "page %d",page);
+  send_data();
+  ets_uart_printf("Nextion page:%s. \r\n",nextion->command);
+  //Check_For_Nextion_Data();
 }
 
 void ICACHE_FLASH_ATTR
-PageNextionDisplay(nextionDisplay_t *nextion)
+PageNextionDisplay()
 {
   if (nextion->displayOk)
   {
-    if (nextion->pageNumber == 0)
+    if (nextion->pageNumber == MAINPAGE)
     {
       display_themperature_set(nextion);
       if (ReadDS1307())
       {
-        ets_uart_printf("Send Page 0 \r\n");
-        //Read Temperature is found it
-        DS1307_Temperature();
-        display_themperature(nextion,temperature);
-        display_time(nextion);
-        display_date(nextion);
-        display_day(nextion);
-        display_wifi_rssi(nextion);
+        ets_uart_printf("Send Page:%d. \r\n", MAINPAGE);
+        display_time();
+        display_date();
+        display_day();
+        display_wifi_rssi();
       }
       else
       {
         ets_uart_printf("\n\r TimerKeeper not found!");
+      }
+
+      //Read Temperature 
+      if (readTemperature((char *)temperature))
+      {
+        display_themperature((char *)temperature);
       }
     }
   }

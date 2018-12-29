@@ -21,6 +21,8 @@
 #include "driver/tcpServer.h"
 
 #include "driver/nextion.h"
+#include "driver/thermo.h"
+#include "driver/si7021.h"
 //#include "c_types.h"
 //#include "mqtt/mqtt.h"
 
@@ -31,8 +33,8 @@ os_timer_t menuTimer;
 os_timer_t errorTimer;
 rboot_config config_rboot;
 mqttserver mqtt_Server;
-//Nextion Display Struct
-nextionDisplay_t nextionDisplay;
+
+
 
 //static os_timer_t beepTimer;
 static u8 tick;
@@ -220,8 +222,10 @@ Main(void)
 	//disarm timer
 	os_timer_disarm(&mainTimer);
 
+	
+
 	//Check for message from Display
-	Check_For_Nextion_Data(&nextionDisplay);
+	Check_For_Nextion_Data();
 
 	//Check for scaned wifi
 	if (wifiStatus.scaned == 1)
@@ -244,6 +248,9 @@ Main(void)
 	tick++;
 	if (tick == 100)
 	{
+       //Check for Thermo
+	   controllerOn();
+		
 		tick = 0;
 		wifiStatus.count--;
 		if (wifiStatus.count < 0)
@@ -256,7 +263,7 @@ Main(void)
 		}
 		//softapStatus();
 		//Display();
-		display_time(&nextionDisplay);
+		display_time();
 		seconds++;
 		u8 minuteNow;
 		minuteNow = minutes;
@@ -277,7 +284,7 @@ Main(void)
 			if (sleep > 0)
 				sleep--;
 			seconds = 0;
-			display_date(&nextionDisplay);
+			display_date();
 			//Display();
 			//status.tcp=0;
 			if (minutes > 59)
@@ -293,22 +300,13 @@ Main(void)
 		if (seconds % 15 == 0)
 		{
 			//ets_uart_printf("Main 15-second routine Page:%d \n\r",nextionDisplay.pageNumber);
-			//ReadDS1307();
-			if (ReadDS1307())
+			ReadDS1307();
+			//DS1307_Temperature();
+			if (readTemperature((char *)temperature))
 			{
-				//ets_uart_printf("\n\r Timekeeper  is OK !");
-				//Read Temperature is found it
-				if(nextionDisplay.pageNumber==0)
-				{
-				DS1307_Temperature();
-				display_themperature(&nextionDisplay,(char *)temperature);
-				display_wifi_rssi(&nextionDisplay);
-				}
+				display_themperature((char *)temperature);
 			}
-			else
-			{
-				ets_uart_printf("\n\r TimerKeeper not found!");
-			}
+			display_wifi_rssi();
 		}
 
 		//display_date();
@@ -607,7 +605,7 @@ SystemInitOk()
 
 	power_init_pin();
 	//InitKeys();
-	nextion_display_init(&nextionDisplay);
+	
 	
 	//beep_init_pin();
 	//beep();
@@ -669,9 +667,7 @@ SystemInitOk()
 	//displayTimer=DISPLAYTIMER;
 	//initOledDisplay();
 
-	PageNextion(&nextionDisplay);
-	os_delay_us(10);
-    PageNextionDisplay(&nextionDisplay);
+	
 
 	//	eeprom = eepromReadByte(0);
 	//	if (eeprom) {
@@ -688,16 +684,31 @@ SystemInitOk()
 	//     ClearDisplay();
 	//     Display();
 
+
+
 	if (program.wifiLan)
 	{
 		InitWifi();
 	}
+
+    //eeprom_initProgramer();
+	eeprom_readProgramer();
+
+     //Display 
+	nextion_display_init();
+	os_delay_us(1000);
+	PageNextion(MAINPAGE);
+	os_delay_us(100);
+    PageNextionDisplay(); 
+
+    //Start Main Thread
 	os_timer_disarm(&mainTimer);
 	os_timer_setfn(&mainTimer, Main, NULL);
 	os_timer_arm(&mainTimer, 10, 0);
 
-	//eeprom_initProgramer();
-	eeprom_readProgramer();
+	
+
+   
 }
 
 void ICACHE_FLASH_ATTR

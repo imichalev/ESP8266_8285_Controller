@@ -1,6 +1,6 @@
 /*
 
- * nextion.c
+ * nextion.h
  *
  *  Created on: 22.12.2018 �.
  *      Author: imihalev
@@ -37,15 +37,19 @@ typedef struct
 #define VIOLET 51603
 #define BLUE 31
 
-void PageNextionDisplay(nextionDisplay_t* nextion);
-void PageNextion(nextionDisplay_t* nextion);
-void nextion_display_init(nextionDisplay_t* nextion);
-void Check_For_Nextion_Data(nextionDisplay_t* nextion);
-void display_themperature(nextionDisplay_t* nextion,char* themperature);
-void display_time(nextionDisplay_t* nextion);
-void display_date(nextionDisplay_t* nextion);
-void display_wifi_rssi(nextionDisplay_t* nextion);
-void display_day(nextionDisplay_t* nextion);
+#define MAINPAGE 1
+
+void PageNextionDisplay();
+void PageNextion(uint8_t page);
+void nextion_display_init();
+void Check_For_Nextion_Data();
+void display_themperature(char* themperature);
+void display_time();
+void display_date();
+void display_wifi_rssi();
+void display_day();
+void nextion_power_off();
+void nextion_power_on();
 
 
 
