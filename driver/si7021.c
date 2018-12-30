@@ -19,6 +19,23 @@
 #include "stdlib.h"
 //#include "stdlib_noniso.h"
 
+void ICACHE_FLASH_ATTR
+floatToString(float value, char *buffer)
+{
+    int val1 = (int)value;
+    unsigned int val2;
+    if (value < 0)
+    {
+        val2 = (int)(-100.0 * value) % 100;
+    }
+    else
+    {
+        val2 = (int)(100.0 * value) % 100;
+    }
+   
+    ets_sprintf(buffer, "%i.%02u", val1, val2);
+   
+}
 
 void ICACHE_FLASH_ATTR
  ftoa(float Value, char* Buffer)
@@ -43,14 +60,19 @@ void ICACHE_FLASH_ATTR
      int i, count = 0;
      
      helper.f = Value;
+     //ets_uart_printf("helper.f:0x%x\n",helper.f);
      //mantissa is LS 23 bits
      mantissa = helper.mantissa_lo;
+      //ets_uart_printf("mantissa:0x%x\n",mantissa);
+      //ets_uart_printf("mantissa_hi:0x%x\n",helper.mantissa_hi);
      mantissa += ((unsigned long) helper.mantissa_hi << 16);
      //add the 24th bit to get 1.mmmm^eeee format
      mantissa += 0x00800000;
+     //ets_uart_printf("mantissa_finish:0x%x\n",mantissa);
      //exponent is biased by 127
+     //ets_uart_printf("helper.exponent:0x%x\n",helper.exponent);
      exponent = (signed char) helper.exponent - 127;
-     
+     //ets_uart_printf("exponent:0x%x\n",exponent);
      //too big to shove into 8 chars
      if (exponent > 18)
      {
@@ -251,7 +273,7 @@ WAIT_SI7021:
         } else goto WAIT_SI7021;
 
     }
-    ets_uart_printf("count_wait:0x%x \n",count_wait);
+    //ets_uart_printf("count_wait:0x%x \n",count_wait);
     msb = i2c_master_readByte(); //ack
     i2c_master_send_ack();
     lsb = i2c_master_readByte(); //ack
@@ -260,22 +282,20 @@ WAIT_SI7021:
     i2c_master_send_nack();
     i2c_master_stop();
 
-      ets_uart_printf("Temperature msb:0x%x \n", msb);
-      ets_uart_printf("Temperature lsb:0x%x \n", lsb);
-      ets_uart_printf("Temperature crc:0x%x \n", crc);
+      //ets_uart_printf("Temperature msb:0x%x \n", msb);
+      //ets_uart_printf("Temperature lsb:0x%x \n", lsb);
+      //ets_uart_printf("Temperature crc:0x%x \n", crc);
     
 
     uint16_t raw_value = (uint16_t)msb << 8 | (uint16_t)lsb;
-      ets_uart_printf("Temperature raw_value:0x%x \n", raw_value);
+      //ets_uart_printf("Temperature raw_value:0x%x \n", raw_value);
     if (check_crc(raw_value, crc))
     {
-         themp = (raw_value * 175.72)/65536.0-46.85;
-         char charVal[10]; 
-        ftoa(themp,charVal);
-        ets_uart_printf("Temperature is:%s \n",charVal);
-        //ets_uart_printf("Temperature is:%s \n", charVal);
+        themp = (raw_value * 175.72)/65536.0-46.85; 
+        char charVal[6]; 
+        floatToString(themp,charVal);   
         ets_sprintf(themperature,"%s", charVal);
-        ets_uart_printf("Temperature is:%s\n", themperature);
+        //ets_uart_printf("Temperature is:%s\n", themperature);
         err = TRUE;
     }
 END:

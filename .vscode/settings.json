@@ -8,6 +8,8 @@
         "osapi.h": "c",
         "user_interface.h": "c",
         "string.h": "c",
-        "stddef.h": "c"
+        "stddef.h": "c",
+        "oled.h": "c",
+        "stdlib.h": "c"
     }
 }
