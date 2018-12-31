@@ -26,154 +26,165 @@ floatToString(float value, char *buffer)
     unsigned int val2;
     if (value < 0)
     {
-        val2 = (int)(-100.0 * value) % 100;
+        val2 = (int)(-10.0 * value) % 10;
     }
     else
     {
-        val2 = (int)(100.0 * value) % 100;
+        val2 = (int)(10.0 * value) % 10;
     }
    
-    ets_sprintf(buffer, "%i.%02u", val1, val2);
+    //  if (value < 0)
+    // {
+    //     val2 = (int)(-100.0 * value) % 100;
+    // }
+    // else
+    // {
+    //     val2 = (int)(100.0 * value) % 100;
+    // }
+    
+
+    //ets_sprintf(buffer, "%i.%02u", val1, val2);
+    ets_sprintf(buffer, "%i.%01u", val1, val2);
    
 }
 
-void ICACHE_FLASH_ATTR
- ftoa(float Value, char* Buffer)
- {
-     union
-     {
-         float f;
+// void ICACHE_FLASH_ATTR
+//  ftoa(float Value, char* Buffer)
+//  {
+//      union
+//      {
+//          float f;
      
-         struct
-         {
-             unsigned int    mantissa_lo : 16;
-             unsigned int    mantissa_hi : 7;    
-             unsigned int     exponent : 8;
-             unsigned int     sign : 1;
-         };
-     } helper;
+//          struct
+//          {
+//              unsigned int    mantissa_lo : 16;
+//              unsigned int    mantissa_hi : 7;    
+//              unsigned int     exponent : 8;
+//              unsigned int     sign : 1;
+//          };
+//      } helper;
      
-     unsigned long mantissa;
-     signed char exponent;
-     unsigned int int_part;
-     char frac_part[3];
-     int i, count = 0;
+//      unsigned long mantissa;
+//      signed char exponent;
+//      unsigned int int_part;
+//      char frac_part[3];
+//      int i, count = 0;
      
-     helper.f = Value;
-     //ets_uart_printf("helper.f:0x%x\n",helper.f);
-     //mantissa is LS 23 bits
-     mantissa = helper.mantissa_lo;
-      //ets_uart_printf("mantissa:0x%x\n",mantissa);
-      //ets_uart_printf("mantissa_hi:0x%x\n",helper.mantissa_hi);
-     mantissa += ((unsigned long) helper.mantissa_hi << 16);
-     //add the 24th bit to get 1.mmmm^eeee format
-     mantissa += 0x00800000;
-     //ets_uart_printf("mantissa_finish:0x%x\n",mantissa);
-     //exponent is biased by 127
-     //ets_uart_printf("helper.exponent:0x%x\n",helper.exponent);
-     exponent = (signed char) helper.exponent - 127;
-     //ets_uart_printf("exponent:0x%x\n",exponent);
-     //too big to shove into 8 chars
-     if (exponent > 18)
-     {
-         Buffer[0] = 'I';
-         Buffer[1] = 'n';
-         Buffer[2] = 'f';
-         Buffer[3] = '\0';
-         return;
-     }
+//      helper.f = Value;
+//      //ets_uart_printf("helper.f:b%b\n",helper.f);
+//      //mantissa is LS 23 bits
+//      mantissa = helper.mantissa_lo;
+//       //ets_uart_printf("mantissa:0x%x\n",mantissa);
+//       //ets_uart_printf("mantissa_hi:0x%x\n",helper.mantissa_hi);
+//      mantissa += ((unsigned long) helper.mantissa_hi << 16);
+//      //add the 24th bit to get 1.mmmm^eeee format
+//      mantissa += 0x00800000;
+//      //ets_uart_printf("mantissa_finish:0x%x\n",mantissa);
+//      //exponent is biased by 127
+//      //ets_uart_printf("helper.exponent:0x%x\n",helper.exponent);
+//      exponent = (signed char) helper.exponent - 127;
+//      //ets_uart_printf("exponent:0x%x\n",exponent);
+//      //too big to shove into 8 chars
+//      if (exponent > 18)
+//      {
+//          Buffer[0] = 'I';
+//          Buffer[1] = 'n';
+//          Buffer[2] = 'f';
+//          Buffer[3] = '\0';
+//          return;
+//      }
      
-     //too small to resolve (resolution of 1/8)
-     if (exponent < -3)
-     {
-         Buffer[0] = '0';
-         Buffer[1] = '\0';
-         return;
-     }
+//      //too small to resolve (resolution of 1/8)
+//      if (exponent < -3)
+//      {
+//          Buffer[0] = '0';
+//          Buffer[1] = '\0';
+//          return;
+//      }
      
-     count = 0;
+//      count = 0;
      
-     //add negative sign (if applicable)
-     if (helper.sign)
-     {
-         Buffer[0] = '-';
-         count++;
-     }
+//      //add negative sign (if applicable)
+//      if (helper.sign)
+//      {
+//          Buffer[0] = '-';
+//          count++;
+//      }
      
-     //get the integer part
-     int_part = mantissa >> (23 - exponent);    
-     //convert to string
-     //itoa(int_part, &Buffer[count]);
-     ets_sprintf(&Buffer[count],"%d",int_part);
+//      //get the integer part
+//      int_part = mantissa >> (23 - exponent);    
+//      //convert to string
+//      //itoa(int_part, &Buffer[count]);
+//      ets_sprintf(&Buffer[count],"%d",int_part);
      
-     //find the end of the integer
-     for (i = 0; i < 8; i++)
-         if (Buffer[i] == '\0')
-         {
-             count = i;
-             break;
-         }        
+//      //find the end of the integer
+//      for (i = 0; i < 8; i++)
+//          if (Buffer[i] == '\0')
+//          {
+//              count = i;
+//              break;
+//          }        
  
-     //not enough room in the buffer for the frac part    
-     if (count > 5)
-         return;
+//      //not enough room in the buffer for the frac part    
+//      if (count > 5)
+//          return;
      
-     //add the decimal point    
-     Buffer[count++] = '.';
+//      //add the decimal point    
+//      Buffer[count++] = '.';
      
-     //use switch to resolve the fractional part
-     switch (0x7 & (mantissa  >> (20 - exponent)))
-     {
-         case 0:
-             frac_part[0] = '0';
-             frac_part[1] = '0';
-             frac_part[2] = '0';
-             break;
-         case 1:
-             frac_part[0] = '1';
-             frac_part[1] = '2';
-             frac_part[2] = '5';            
-             break;
-         case 2:
-             frac_part[0] = '2';
-             frac_part[1] = '5';
-             frac_part[2] = '0';            
-             break;
-         case 3:
-             frac_part[0] = '3';
-             frac_part[1] = '7';
-             frac_part[2] = '5';            
-             break;
-         case 4:
-             frac_part[0] = '5';
-             frac_part[1] = '0';
-             frac_part[2] = '0';            
-             break;
-         case 5:
-             frac_part[0] = '6';
-             frac_part[1] = '2';
-             frac_part[2] = '5';            
-             break;
-         case 6:
-             frac_part[0] = '7';
-             frac_part[1] = '5';
-             frac_part[2] = '0';            
-             break;
-         case 7:
-             frac_part[0] = '8';
-             frac_part[1] = '7';
-             frac_part[2] = '5';                    
-             break;
-     }
+//      //use switch to resolve the fractional part
+//      switch (0x7 & (mantissa  >> (20 - exponent)))
+//      {
+//          case 0:
+//              frac_part[0] = '0';
+//              frac_part[1] = '0';
+//              frac_part[2] = '0';
+//              break;
+//          case 1:
+//              frac_part[0] = '1';
+//              frac_part[1] = '2';
+//              frac_part[2] = '5';            
+//              break;
+//          case 2:
+//              frac_part[0] = '2';
+//              frac_part[1] = '5';
+//              frac_part[2] = '0';            
+//              break;
+//          case 3:
+//              frac_part[0] = '3';
+//              frac_part[1] = '7';
+//              frac_part[2] = '5';            
+//              break;
+//          case 4:
+//              frac_part[0] = '5';
+//              frac_part[1] = '0';
+//              frac_part[2] = '0';            
+//              break;
+//          case 5:
+//              frac_part[0] = '6';
+//              frac_part[1] = '2';
+//              frac_part[2] = '5';            
+//              break;
+//          case 6:
+//              frac_part[0] = '7';
+//              frac_part[1] = '5';
+//              frac_part[2] = '0';            
+//              break;
+//          case 7:
+//              frac_part[0] = '8';
+//              frac_part[1] = '7';
+//              frac_part[2] = '5';                    
+//              break;
+//      }
      
-     //add the fractional part to the output string
-     for (i = 0; i < 3; i++)
-         if (count < 7)
-             Buffer[count++] = frac_part[i];
+//      //add the fractional part to the output string
+//      for (i = 0; i < 3; i++)
+//          if (count < 7)
+//              Buffer[count++] = frac_part[i];
      
-     //make sure the output is terminated
-     Buffer[count] = '\0';
- }
+//      //make sure the output is terminated
+//      Buffer[count] = '\0';
+//  }
 
 
 
@@ -231,7 +242,8 @@ writeCommand(uint8_t command, uint8_t data)
 bool ICACHE_FLASH_ATTR
 readTemperature(char *themperature) //double *themperature
 {
-    ets_uart_printf("Read Temperature from si7021 \r\n");
+    system_soft_wdt_feed();
+    //ets_uart_printf("Read Temperature from si7021 \r\n");
     bool err = false;
     float themp;
     uint8_t msb, lsb, crc;
@@ -294,31 +306,61 @@ WAIT_SI7021:
         themp = (raw_value * 175.72)/65536.0-46.85; 
         char charVal[6]; 
         floatToString(themp,charVal);   
-        ets_sprintf(themperature,"%s", charVal);
-        //ets_uart_printf("Temperature is:%s\n", themperature);
+        ets_sprintf(themperature,"%s\x9c", charVal);
+        ets_uart_printf("Temperature is:%s\n", themperature);
         err = TRUE;
     }
 END:
+    system_soft_wdt_feed();
     return err;
 }
 
-bool readHumidity(double *humidity)
-{
+bool readHumidity(char *humidity)
+{  
+    system_soft_wdt_feed();
+    //ets_uart_printf("Read Humidity si7021 \r\n");
     bool err = FALSE;
     uint8_t msb, lsb, crc;
+    uint32_t humidity_val;
+    uint8_t count_wait = 0xff;
     //Start Measure
     i2c_master_start();
     i2c_master_writeByte(SI7021_ADDR << 1 | I2C_MASTER_WRITE);
     //Check for Ack
+    if (!i2c_master_checkAck())
+    {
+        ets_uart_printf("I2C si7021 command SI7021_ADDR error:0x%x \r\n",MTNHMM);
+        i2c_master_stop();
+        goto END;
+    }
     i2c_master_writeByte(MRHNHMM);
     //Check for Ack
+    if (!i2c_master_checkAck())
+    {
+        ets_uart_printf("I2C si7021 command MRHNHMM error:0x%x \r\n",MTNHMM);
+        i2c_master_stop();
+        goto END;
+    }
     i2c_master_stop();
-    //Waiting some time
-    os_delay_us(20);
-    //Read Data from sensor
+    //Waiting sensor
+WAIT_SI7021:
+    count_wait--;
+    os_delay_us(1000);
     i2c_master_start();
-    i2c_master_writeByte(SI7021_ADDR << 1 | I2C_MASTER_READ);
+    i2c_master_writeByte((SI7021_ADDR << 1) | I2C_MASTER_READ);
     //Check for Ack
+    if (!i2c_master_checkAck())
+    {
+        if (count_wait == 0)
+        {
+            ets_uart_printf("I2C si7021 master read  address error:0x%x ;count_wait:%0x%x\r\n", ((SI7021_ADDR << 1) | I2C_MASTER_READ), count_wait);
+            i2c_master_stop();
+            goto END;
+        }
+        else
+            goto WAIT_SI7021;
+    }
+    //Read Data from sensor
     msb = i2c_master_readByte(); //ack
     i2c_master_send_ack();
     lsb = i2c_master_readByte(); //ack
@@ -330,11 +372,14 @@ bool readHumidity(double *humidity)
     uint16_t raw_value = (uint16_t)msb << 8 | (uint16_t)lsb;
     if (check_crc(raw_value, crc))
     {
-        *humidity = ((raw_value * 125 / 65536.0) - 6.0);
-        ets_uart_printf("Humidity is:%6.2f\n", *humidity);
+        //ets_uart_printf("Humidity raw_value is:%d\n", raw_value);
+        humidity_val = ((raw_value * 125)/65536 - 6);
+        ets_sprintf(humidity, "%d\%", humidity_val);
+        ets_uart_printf("Humidity is:%s\n", humidity);
         err = TRUE;
     }
 END:
+    system_soft_wdt_feed();
     return err;
 }
 

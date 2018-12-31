@@ -118,6 +118,9 @@ display_themperature(char *temperature)
     thermo = (thermo - 8) * 3;
     //ets_sprintf(send_toNextion, "ThermoControl.j1.val=%d%c%c%c", thermo, 0xFF, 0xFF, 0xFF);
     //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
+    ets_sprintf(nextion->command, "vis j1,1");
+    send_data();
+    os_delay_us(10);
     ets_sprintf(nextion->command, "ThermoControl.j1.val=%d", thermo);
     send_data();
     //Send color bar for thermometer
@@ -149,14 +152,16 @@ display_themperature(char *temperature)
     }
     //ets_sprintf(send_toNextion, "ThermoControl.j1.ppic=%d%c%c%c", color, 0xFF, 0xFF, 0xFF);
     //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
-    ets_sprintf(nextion->command, "ThermoControl.j1.ppic=%d", color);
-    send_data();
+    //ets_sprintf(nextion->command, "ThermoControl.j1.ppic=%d", color);
+    //send_data();
     //ets_uart_printf("Send to Nextion:%s \n",send_toNextion);
     //os_delay_us(10);
     //ets_sprintf(send_toNextion, "ThermoControl.t2.pco=%d%c%c%c", colorText, 0xFF, 0xFF, 0xFF);
     //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
-    ets_sprintf(nextion->command, "ThermoControl.t2.pco=%d", colorText);
-    send_data();
+
+    //ets_sprintf(nextion->command, "ThermoControl.t2.pco=%d", colorText);
+    //send_data();
+
     //os_delay_us(100);
   }
   //Check_For_Nextion_Data(nextion);
@@ -288,10 +293,47 @@ display_day()
 }
 
 void ICACHE_FLASH_ATTR
+display_humidity()
+{
+  if (nextion->displayOk && nextion->pageNumber == MAINPAGE)
+  {
+    
+    if (strlen(humidity) == 0)
+    {
+      ets_sprintf(nextion->command, "vis j3,0");
+      send_data(nextion);
+      os_delay_us(10);
+      ets_sprintf(nextion->command, "vis t7,0");
+      send_data(nextion);
+
+    }
+    else
+    {
+
+      uint8_t level = atoi(humidity);
+      //ets_uart_printf("Nextion_Humidity_Level:%d\n",level);
+      ets_sprintf(nextion->command, "ThermoControl.t7.txt=\"%d\%\"",level);
+      send_data(nextion);
+      os_delay_us(10);
+      ets_sprintf(nextion->command, "ThermoControl.j3.val=%d", level);
+      send_data(nextion);
+      os_delay_us(10);
+      ets_sprintf(nextion->command, "vis j3,1");
+      send_data(nextion);
+      os_delay_us(10);
+      ets_sprintf(nextion->command, "vis t7,1");
+      send_data(nextion);
+      os_delay_us(10);
+     
+    }
+  }
+}
+
+void ICACHE_FLASH_ATTR
 display_wifi_rssi()
 {
     
-  //check for page where rssi display
+  //check for page where rssi displayx
   if (nextion->displayOk && nextion->pageNumber == MAINPAGE)
   {
     //ets_uart_printf("Display rssi:\r\n");
@@ -424,6 +466,10 @@ PageNextion(uint8_t page)
   ets_sprintf(nextion->command, "page %d",page);
   send_data();
   ets_uart_printf("Nextion page:%s. \r\n",nextion->command);
+  //os_delay_us(10);
+  //ets_sprintf(nextion->command, "vis j1,0",page);
+  //send_data();
+ 
   //Check_For_Nextion_Data();
 }
 
@@ -452,7 +498,13 @@ PageNextionDisplay()
       if (readTemperature((char *)temperature))
       {
         display_themperature((char *)temperature);
-      }
+      } 
+
+      if(readHumidity((char *)humidity))
+			{
+              display_humidity();
+			}
+
     }
   }
 }

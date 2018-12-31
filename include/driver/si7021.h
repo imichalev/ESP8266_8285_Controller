@@ -49,7 +49,7 @@ typedef struct {
 
 
 bool readTemperature(char *themperature);
-bool readHumidity(double *humidity);
+bool readHumidity(char *humidity);
 //void readUserRegister(user_register_t* data);
 //void writeUserRegister(user_register_t* data);
 

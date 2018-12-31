@@ -297,7 +297,7 @@ Main(void)
 		}
 
 		//Sync local time
-		if (seconds % 15 == 0)
+		if (seconds % 5 == 0)
 		{
 			//ets_uart_printf("Main 15-second routine Page:%d \n\r",nextionDisplay.pageNumber);
 			ReadDS1307();
@@ -305,6 +305,10 @@ Main(void)
 			if (readTemperature((char *)temperature))
 			{
 				display_themperature((char *)temperature);
+			}
+			if(readHumidity((char *)humidity))
+			{
+              display_humidity();
 			}
 			display_wifi_rssi();
 		}

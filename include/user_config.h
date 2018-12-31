@@ -55,6 +55,7 @@ volatile u8 lsbtemp;
 //volatile u8 off_hour;
 //volatile u8 off_minute;
 char temperature[10];
+char humidity[10];
 char lan_ssid[32];
 char lan_pwd[16];
 u8 lan_type;

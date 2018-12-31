@@ -27,15 +27,17 @@ typedef struct
 #define NEXTION_INVALID_INSTRUCTION 0x00
 #define NEXTION_SUCCESSUUL_EXECUTION 0x01
 #define NEXTION_NAME_INVALID 0x1A
-#define THERMO_BLUE 34
-#define THERMO_ORANGE 31
-#define THERMO_VIOLET 32
-#define THERMO_RED 33
+#define THERMO_BLUE 21
+#define THERMO_VIOLET 22
+#define THERMO_ORANGE 23
+#define THERMO_RED 24
+
 
 #define RED 63488
 #define ORANGE 64520
 #define VIOLET 51603
 #define BLUE 31
+#define BLACK 0
 
 #define MAINPAGE 1
 
@@ -50,6 +52,7 @@ void display_wifi_rssi();
 void display_day();
 void nextion_power_off();
 void nextion_power_on();
+void display_humidity();
 
 
 
