@@ -11,7 +11,7 @@ include	settings.mk
 #ESPBAUD		= 256000
 
 # Basic project settings
-MODULES	= driver user mqtt
+MODULES	= driver user mqtt HTML
 LIBS	= c gcc hal phy pp net80211 lwip wpa main crypto
 
 # Root includes

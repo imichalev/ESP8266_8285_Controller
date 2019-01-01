@@ -461,20 +461,24 @@ PageNextion(uint8_t page)
 {
   //char send_toNextion[28]={0};
   //ets_sprintf(send_toNextion, "\"sendme\"%c%c%c", 0xFF, 0xFF, 0xFF);
- // Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
-  
-  ets_sprintf(nextion->command, "page %d",page);
+  // Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
+
+  ets_sprintf(nextion->command, "page %d", page);
   send_data();
-  ets_uart_printf("Nextion page:%s. \r\n",nextion->command);
+  ets_uart_printf("Nextion page:%s. \r\n", nextion->command);
+  if (page == MAINPAGE)
+  {
+    display_themperature_set(nextion);
+  }
   //os_delay_us(10);
   //ets_sprintf(nextion->command, "vis j1,0",page);
   //send_data();
- 
+
   //Check_For_Nextion_Data();
 }
 
 void ICACHE_FLASH_ATTR
-PageNextionDisplay()
+PageNextionDisplay() //MAINPAGE
 {
   if (nextion->displayOk)
   {
@@ -491,7 +495,7 @@ PageNextionDisplay()
       }
       else
       {
-        ets_uart_printf("\n\r TimerKeeper not found!");
+        ets_uart_printf("TimerKeeper not found! \r\n");
       }
 
       //Read Temperature 
