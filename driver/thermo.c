@@ -23,12 +23,13 @@ controllerOn()
     {
         POWER_ON;
         nextion_power_on();
+        power=1;
 
     }
     else
     {
         POWER_OFF;
         nextion_power_off();
-       
+        power=0;
     }
 }

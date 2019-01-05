@@ -83,6 +83,7 @@ u8 key;
 bool volatile keypush;
 
 uint8_t themperatureSet;
+uint8_t power;
 volatile u8 error;
 //volatile u8 wifi_station_try_connect;
 
@@ -116,6 +117,7 @@ typedef struct {
     char mqttPassword[16];
     char mqttTopicRead[32];
     char mqttTopicWrite[32];
+	char mqttTopicDataJsn[32];
 } mqttserver;
 
 

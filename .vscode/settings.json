@@ -10,6 +10,10 @@
         "string.h": "c",
         "stddef.h": "c",
         "oled.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "mqtt.h": "c",
+        "types.h": "c",
+        "time.h": "c",
+        "times.h": "c"
     }
 }

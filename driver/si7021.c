@@ -306,7 +306,7 @@ WAIT_SI7021:
         themp = (raw_value * 175.72)/65536.0-46.85; 
         char charVal[6]; 
         floatToString(themp,charVal);   
-        ets_sprintf(themperature,"%s\x9c", charVal);
+        ets_sprintf(themperature,"%s", charVal);
         ets_uart_printf("Temperature is:%s\n", themperature);
         err = TRUE;
     }
@@ -374,7 +374,7 @@ WAIT_SI7021:
     {
         //ets_uart_printf("Humidity raw_value is:%d\n", raw_value);
         humidity_val = ((raw_value * 125)/65536 - 6);
-        ets_sprintf(humidity, "%d\%", humidity_val);
+        ets_sprintf(humidity, "%d", humidity_val);
         ets_uart_printf("Humidity is:%s\n", humidity);
         err = TRUE;
     }

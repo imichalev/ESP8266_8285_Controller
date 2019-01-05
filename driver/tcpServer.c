@@ -20,6 +20,7 @@
 #include "spi_flash.h"
 #include "driver/oled.h"
 #include "driver/eeprom.h"
+//#include "time.h"
 
 static struct espconn esp_conn;
 static esp_tcp esptcp;
@@ -1595,5 +1596,54 @@ MqttInit() {
 
 }
 
+void ICACHE_FLASH_ATTR
+mqttSendDataJsn(char *datajsn)
+{
+	if (status.mqttOK)
+	{
+		//topic /data/jsn
+		//user: device
+		//datajsn -some data in jsn format ....
+		if (os_strcmp(mqtt_Server.mqttTopicDataJsn, "/data/jsn") != 0)
+		{
+			ets_sprintf(mqtt_Server.mqttTopicDataJsn, "%s", "/data/jsn");
+			//need save to eeprom -later
+		}
+        
+		ets_uart_printf("Data Jsn to publish:%s \n",datajsn);
+		MQTT_Publish(&mqttClient, mqtt_Server.mqttTopicDataJsn, datajsn, strlen(datajsn), 0, 0);
+	}
+}
+
+void ICACHE_FLASH_ATTR
+sendSensorData()
+{
+  char datajsn[100];
+  //Convert to jsn format and send it to mqtt topic 
+  //ets_sprintf(datajsn,"{\"t\":%s,\"h\":%s,\"p\":%d}",temperature,humidity,power);
+  //timeStamp
+//    time_t now;
+//    struct tm *loctime;
+//    loctime->tm_sec=seconds;
+//    loctime->tm_min=minutes;
+//    loctime->tm_hour=hours;
+//    loctime->tm_mday=date;
+//    loctime->tm_mon=month;
+//    loctime->tm_year=year;
+   
+
+   
+
+   
 
 
+
+  //time(&now);
+  //uint32 get_time=system_get_time();
+  //uint32 rtc_time=system_get_rtc_time();
+  //ets_uart_printf("now:0x%x \n",now);
+  //ets_uart_printf("system_get_rtc_time:0x%x \n",system_get_rtc_time());
+  ets_sprintf(datajsn,"{\"ts\":\"%02d:%02d:%02d\",\"t\":\"%s\",\"h\":\"%s\",\"p\":\"%d\"}",hours,minutes,seconds,temperature,humidity,power);
+  mqttSendDataJsn(datajsn);
+
+}

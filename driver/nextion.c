@@ -112,7 +112,7 @@ display_themperature(char *temperature)
     //volatile char send_toNextion[28] = {0};
     //ets_sprintf(send_toNextion, "ThermoControl.t2.txt=\"%s\"%c%c%c", temperature, 0xFF, 0xFF, 0xFF);
     //Softuart_Puts(nextion->softuart, (const char *)send_toNextion);
-    ets_sprintf(nextion->command, "ThermoControl.t2.txt=\"%s\"", temperature);
+    ets_sprintf(nextion->command, "ThermoControl.t2.txt=\"%s\x9c\"", temperature);
     send_data(nextion);
     uint8_t thermo = atoi(temperature);
     thermo = (thermo - 8) * 3;

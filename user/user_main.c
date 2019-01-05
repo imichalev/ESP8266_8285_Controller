@@ -297,7 +297,7 @@ Main(void)
 		}
 
 		//Sync local time
-		if (seconds % 5 == 0)
+		if (seconds % 15 == 0)
 		{
 			//ets_uart_printf("Main 15-second routine Page:%d \n\r",nextionDisplay.pageNumber);
 			ReadDS1307();
@@ -310,6 +310,9 @@ Main(void)
 			{
               display_humidity();
 			}
+			 //Send data to mqtt broker to put in to data base;
+             sendSensorData();
+
 			display_wifi_rssi();
 		}
 
