@@ -321,7 +321,7 @@ bool readHumidity(char *humidity)
     //ets_uart_printf("Read Humidity si7021 \r\n");
     bool err = FALSE;
     uint8_t msb, lsb, crc;
-    uint32_t humidity_val;
+    float humidity_val;
     uint8_t count_wait = 0xff;
     //Start Measure
     i2c_master_start();
@@ -373,8 +373,10 @@ WAIT_SI7021:
     if (check_crc(raw_value, crc))
     {
         //ets_uart_printf("Humidity raw_value is:%d\n", raw_value);
-        humidity_val = ((raw_value * 125)/65536 - 6);
-        ets_sprintf(humidity, "%d", humidity_val);
+        humidity_val = ((raw_value * 125.0)/65536.0 - 6.0);
+        char charVal[6]; 
+        floatToString(humidity_val,charVal);   
+        ets_sprintf(humidity, "%s", charVal);
         ets_uart_printf("Humidity is:%s\n", humidity);
         err = TRUE;
     }
