@@ -327,10 +327,10 @@ Main(void)
 		//		else displayTimer--;
 
 		//Check program status
-		if (program.on)
-			POWER_ON;
-		else
-			POWER_OFF;
+		// if (program.on)
+		// 	POWER_ON;
+		// else
+		// 	POWER_OFF;
 	}
 
 	//Key 1 Show scanning
