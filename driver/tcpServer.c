@@ -1643,7 +1643,7 @@ sendSensorData()
   //uint32 rtc_time=system_get_rtc_time();
   //ets_uart_printf("now:0x%x \n",now);
   //ets_uart_printf("system_get_rtc_time:0x%x \n",system_get_rtc_time());
-  ets_sprintf(datajsn,"{\"ts\":\"%02d:%02d:%02d\",\"tget\":\"%s\",\"tset\":\"%d\",\"h\":\"%s\",\"p\":\"%d\"}",hours,minutes,seconds,temperature,themperatureSet,humidity,power);
+  ets_sprintf(datajsn,"{\"ts\":\"%02d-%02d-%02d %02d:%02d:%02d\",\"tget\":\"%s\",\"tset\":\"%d\",\"h\":\"%s\",\"p\":\"%d\"}",year,month,date,hours,minutes,seconds,temperature,themperatureSet,humidity,power);
   mqttSendDataJsn(datajsn);
 
 }

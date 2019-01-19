@@ -19,7 +19,7 @@ controllerOn()
     currentThemp = atoi(temperature);
 
     thermo_err = themperatureSet - currentThemp;
-    if (thermo_err > 0)
+    if (thermo_err > 0.3)
     {
         POWER_ON;
         nextion_power_on();
