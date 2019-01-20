@@ -304,8 +304,9 @@ WAIT_SI7021:
     if (check_crc(raw_value, crc))
     {
         themp = (raw_value * 175.72)/65536.0-46.85; 
+        currentTemperature=themp;
         char charVal[6]; 
-        floatToString(themp,charVal);   
+        floatToString(themp,charVal);
         ets_sprintf(themperature,"%s", charVal);
         ets_uart_printf("Temperature is:%s\n", themperature);
         err = TRUE;
